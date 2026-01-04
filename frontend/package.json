@@ -5,9 +5,16 @@
   "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-packager . omniview --platform=win32 --arch=x64  --overwrite",
+    "build": "electron-packager . omniview --platform=win32 --arch=x64 --icon=src/assets/icon.ico --overwrite",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dist": "node minify.js && electron-packager . omniview --platform=win32 --arch=x64 --overwrite --asar"
+    "dist": "node minify.js && electron-packager . omniview --platform=win32 --arch=x64 --icon=src/assets/icon.ico --overwrite --asar",
+    "build:win": "electron-builder --win --x64"
+  },
+  "build": {
+    "appId": "com.example.omniview",
+    "win": {
+      "icon": "src/assets/icon.ico"
+    }
   },
   "keywords": [],
   "author": "",
@@ -15,6 +22,7 @@
   "devDependencies": {
     "@electron/packager": "^18.4.0",
     "electron": "^37.2.4",
-    "terser": "^5.43.1"
+    "terser": "^5.43.1",
+    "electron-builder": "^24.9.1"
   }
 }

@@ -1,0 +1,235 @@
+OMNIVIEW — Project Methodology and Module Walkthrough
+Date: 2025-11-13
+
+1) Executive overview
+- Purpose: OmniView fuses satellite/aerial imagery, public web signals, and AI to support disaster monitoring and rapid post-event assessment.
+- Architecture: Electron frontend (desktop UI) + Flask backend (Python APIs) + external data/LLM services.
+- Core capabilities:
+  • Real‑time news and imagery discovery for a disaster query
+  • AI-driven image understanding and report generation (multi‑LLM fallback)
+  • Built‑up area change detection from pre/post images (UNet)
+  • Road extraction from large Sentinel‑2 tiles (TensorFlow model + post‑processing)
+  • Flight situational data (OpenSky Network)
+  • Optional social media NLP collector (Twitter/Reddit) for geocoded events
+
+2) High-level data flow
+Frontend (Electron)
+  ↕ REST calls (http://localhost:5000)
+Backend (Flask app.py)
+  ↘ Google Custom Search (News+Images)
+  ↘ AI image captioning (Hugging Face Inference)
+  ↘ LLM reasoning (Gemini; fallbacks: DeepSeek, Groq)
+  ↘ Charting (matplotlib/seaborn)
+  ↘ Built‑up change detection (PyTorch UNet)
+  ↘ Road extraction (TensorFlow model)
+  ↘ Flight data (OpenSky)
+  ↘ Weather (Frontend uses Open‑Meteo directly)
+
+3) Backend modules and methodology
+3.1 app.py (Flask API + DisasterResponseAgent)
+- Responsibilities
+  • Serves REST endpoints used by the desktop frontend.
+  • Orchestrates an “agentic” pipeline to: search news/images → analyze images → quantify severity → compile a narrative report → generate visual charts.
+  • Hosts other feature endpoints (health, flights, change detection, CSV/GeoJSON helpers).
+
+- Key endpoints
+  • GET /api/status — system status and capabilities
+  • GET /api/test — smoke tests for Gemini, Google search, image generator
+  • POST /api/news — Google Custom Search news for a query
+  • POST /api/images — Google Custom Search images for a query
+  • POST /api/generate_report — full pipeline (see below)
+  • GET /api/health — health info
+  • GET /api/flights — current OpenSky dump (from services/flight_data)
+  • GET /api/disaster-csv — returns curated CSV subset for map markers
+  • POST /api/analyze-disasters — summarizes current map selections with LLM
+  • POST /api/building-change-detection — runs UNet change detection (change_detection.py)
+
+- The DisasterResponseAgent
+  • get_google_news(query): Google Custom Search API; sensible defaults (dateRestrict=30d, sort by date). If API fails, generates realistic fallback articles.
+  • get_google_images(query): Google Custom Search (searchType=image, large photos). If API fails or empty, creates local base64 placeholders for graceful UX.
+  • analyze_images_with_ai(image_urls, query): For each image
+      - If local placeholder (base64), synthesize a plausible structured JSON analysis via LLM
+      - If remote URL, download (with UA header), caption via Hugging Face BLIP (if key available), then request detailed JSON analysis from LLM
+      - Robust parsing: extracts the outermost JSON block from the LLM response; on failure, returns a default analysis
+  • query_huggingface_api(model_id, payload): Calls HF Inference API with retries and 503 handling
+  • query_free_llm_api(prompt): Provider fan‑out with fallbacks
+      1) Gemini (google.generativeai) — primary
+      2) DeepSeek chat completions — fallback
+      3) Groq chat completions (Llama‑3.1‑70B) — fallback
+      4) Static JSON default — last resort
+  • generate_comprehensive_charts(news, image_analysis):
+      - Damage severity bar chart (color‑coded 1–10)
+      - Emergency priority distribution pie chart (high/medium/low)
+      - Resource allocation pie chart derived from average severity
+      Charts returned as base64 images for embedding in the UI.
+  • generate_official_report(query, news, image_analysis, charts):
+      - Builds a structured, executive‑ready Markdown report via LLM prompt with sections (Executive Summary, Incident Overview, Damage Assessment, Operational Status, Priorities, Resources, Recommendations, Confidence)
+      - Adds a technical appendix summarizing counts, time, and model/datasource provenance
+
+- End‑to‑end of POST /api/generate_report
+  1) Fetch 10 recent news articles
+  2) Fetch up to 6 images (or synthesize placeholders)
+  3) Per‑image AI analysis ⇒ structured JSON
+  4) Generate charts from successful analyses
+  5) Request a comprehensive Markdown report from the LLM
+  6) Return: report, charts, summary stats, sample raw data
+
+- API keys consumed (from environment; values not stored in code):
+  • GEMINI_API_KEY — Google Generative AI (Gemini)
+  • GOOGLE_API_KEY, GOOGLE_CX — Google Custom Search (news/images)
+  • HUGGINGFACE_API_KEY — Hugging Face Inference (BLIP captioning)
+  • DEEPSEEK_API_KEY — DeepSeek chat completions fallback
+  • GROQ_API_KEY — Groq chat completions fallback
+
+3.2 change_detection.py (Built‑up change detection — PyTorch UNet)
+- Objective: Quantify and visualize changes in built‑up areas between a pre and post image pair.
+- Model: UNet(in_channels=6, out_channels=1) — pre and post RGB stacked channel‑wise; input resized to 256×256.
+- Inference flow
+  1) Decode base64 “pre_image” and “post_image” from the frontend
+  2) Resize → tensorize; concatenate along channels
+  3) Forward pass → sigmoid → threshold(>0.5) for binary change mask
+  4) Compute statistics (changed pixels, percent) and produce:
+     • mask_image (standalone)
+     • comparison_image (multi‑panel figure)
+     • overlay_image (changes highlighted in red on post image)
+- Endpoint IO contract (via app.py /api/building-change-detection)
+  • Request JSON: { pre_image: base64, post_image: base64 }
+  • Response JSON: { change_percentage, changed_pixels, total_pixels, mask_image, comparison_image, overlay_image }
+- Notes: MODEL_PATH is a local absolute path; ensure it points to unet_builtup_cd.pth on the target machine; add torch/torchvision to backend requirements when packaging.
+
+3.3 road_backend.py (Hugging Face Space — Gradio client)
+- Endpoint: POST /api/road-detection
+  • Accepts base64 image, writes a temp file
+  • Calls HF Space "Vinit710/road_omniview" via gradio_client
+  • Expects a probability mask path in the returned list/tuple
+  • Loads mask and re‑encodes it as base64 data URL for the frontend
+- Rationale: Offloads the heavy segmentation to a hosted HF Space when local models are unavailable.
+
+3.4 road_extract.py (Large‑area road extraction — TensorFlow)
+- Endpoint: POST /api/extract_roads (multipart file upload; TIFF)
+- Pipeline
+  1) Read uploaded Sentinel‑2 tile, convert to PNG for preview
+  2) Load local TF Keras model (MODEL_PATH: road_detection_resnet_e50.h5)
+  3) Grid‑crop the large image; per‑patch inference at 256×256
+  4) Stitch probability map back to full resolution
+  5) Post‑process (thresholding, morphology, connected components, high‑probability reinforcement)
+  6) Create overlay (red roads over RGB) and write PNGs to backend/big_masks
+  7) Serve files via /api/bigroads_file/<filename> for UI consumption
+- Outputs: URLs for original image, processed mask, and overlay.
+- Notes: MODEL_PATH is a local Windows path; ensure it is valid in the deployment environment; add TensorFlow + OpenCV to requirements.
+
+3.5 services/flight_data.py (Flight tracker)
+- Background thread fetches OpenSky Network states every ~30s, storing flights.json
+- GET /api/flights serves the cached JSON to the frontend.
+
+3.6 nlp_socilmedia.py (Optional social media collector — CLI)
+- Not wired into app.py routes; standalone data collector for research/workflows.
+- Data sources
+  • Twitter API v2 via tweepy (requires BEARER token)
+  • Reddit via PRAW (requires client id/secret)
+- Methods
+  • classify_disaster: keyword ratio + zero‑shot (transformers) as fallback
+  • extract_exif_coords_from_url: tries to recover GPS from image EXIF
+  • query_overpass: name→coords via Overpass API
+  • process_posts: sentiment (CardiffNLP), severity heuristics, geocoding via spaCy NER + Overpass; stores into SQLite (disaster_monitor.db)
+
+4) Frontend modules (Electron)
+4.1 src/main/main.js
+- Creates the BrowserWindow, loads splash, sets menu wiring (export, logs, navigation), exposes developer tools in dev.
+
+4.2 Disaster screen (renderer/screens/disaster)
+- disaster.js
+  • News tab: POST /api/news
+  • Report generation: POST /api/generate_report → Markdown rendered to HTML
+  • Post‑disaster map: loads disaster points from GET /api/disaster-csv (pre‑curated CSV); filters by country/year; Leaflet markers with emoji icons
+  • Pre‑disaster map: direct weather hits to Open‑Meteo; displays AI‑style risk summaries (deterministic rules)
+
+4.3 Monitoring screen (renderer/screens/monitoring)
+- monitoring.js
+  • Health check: GET /api/status (TTS spoken)
+  • Building change detection UI: uploads two images and POSTs to /api/building-change-detection; displays mask/comparison/overlay and stats
+  • Location search: Nominatim geocoding, adds a temporary marker
+
+4.4 Analysis screen (renderer/screens/analysis)
+- analysis.js
+  • Voice commands for UX (draw/clear/fit/roads/trends/classification/ndvi/help)
+  • Draw tools (Leaflet.draw) for AOI selection; mock NDVI/Land‑cover analytics for demo
+  • Big Roads extraction: uploads TIFF to POST /api/extract_roads and displays returned images; overlay opacity toggle
+  • Charts: Trends, classification, bar charts (Chart.js) using mock data
+
+5) External services and keys (do not hardcode secrets)
+- Managed via environment variables loaded by python‑dotenv in backend/app.py
+  • GEMINI_API_KEY — Google Generative AI (LLM for reasoning/reporting)
+  • GOOGLE_API_KEY, GOOGLE_CX — Custom Search (news/images)
+  • HUGGINGFACE_API_KEY — Inference API (BLIP captioning) and HF Space auth (if required)
+  • DEEPSEEK_API_KEY — DeepSeek chat completions fallback
+  • GROQ_API_KEY — Groq chat completions fallback
+- Other unauthenticated reads made by the frontend
+  • Open‑Meteo weather (pre‑disaster map)
+  • Nominatim (geocoding)
+- Optional social sources (standalone script): TWITTER_BEARER_TOKEN, REDDIT_CLIENT_ID/SECRET
+- Important: The repo currently contains a backend/.env file with live keys. For security and presentations, remove from VCS and use local machine secrets or a secure secret manager.
+
+6) Agentic methodology (how the “agent” behaves)
+- Tools used by the agent (conceptually):
+  • Web search tool (Google Custom Search) → news + candidate image URLs
+  • Vision captioning tool (Hugging Face BLIP) → short descriptions
+  • Reasoning/planning tool (LLM) → structured JSON analysis per image
+  • Aggregation/quantification tool → severity averages, priority counts
+  • Visualization tool → charts
+  • Reporting tool (LLM) → executive‑ready markdown
+- Orchestration pattern: sequential tool‑use with resilient fallbacks
+  1) If web search fails → synthetic news/images
+  2) If captioning fails → default captions
+  3) If LLM parse fails → guarded JSON extraction, then default schema
+  4) If a provider fails → cascade to next (Gemini → DeepSeek → Groq → static)
+- Output contracts are stable JSON/markdown strings that the UI renders or graphs.
+
+7) Notable implementation details and safeguards
+- JSON extraction robustness: finds the outermost {...} in LLM answers; safe default on decode error.
+- Placeholder image synthesis: base64 PNGs let the pipeline keep running without external network.
+- Charting: colors encode severity (green→amber→orange→red); base64 images shipped inline to the UI.
+- Change detection: explicit thresholding and basic visualization for stakeholder comprehension.
+- Road extraction: multi‑stage morphology to reduce speckle and reinforce high‑probability paths.
+
+8) Assumptions, limitations, and risks
+- Platform‑specific paths: MODEL_PATH values point to Windows absolute paths; must be configurable for portability.
+- Dependencies: backend/requirements.txt misses torch/tensorflow/opencv/matplotlib/seaborn; align requirements before packaging.
+- Rate‑limits/quotas: Google Custom Search, OpenSky, Hugging Face Inference have quotas; add caching and backoffs in production.
+- Security: No auth on APIs; intended for local desktop use. Add auth/rate‑limiting if exposed over a network.
+- Data quality: LLM outputs are estimates; require human verification. The report clearly communicates confidence/limits.
+
+9) Quick endpoint catalog (for slides)
+- Status/Health
+  • GET /api/status
+  • GET /api/health
+- Discovery/Reporting
+  • POST /api/news
+  • POST /api/images
+  • POST /api/generate_report
+  • POST /api/analyze-disasters
+- Geospatial/Models
+  • POST /api/building-change-detection (UNet — PyTorch)
+  • POST /api/extract_roads (TensorFlow)
+  • POST /api/road-detection (Hugging Face Space via Gradio)
+  • GET  /api/bigroads_file/<filename>
+- Data feeds
+  • GET /api/flights (OpenSky cache)
+  • GET /api/disaster-csv (frontend marker dataset)
+
+10) Slide-ready “how it works” script
+- User enters a disaster query in the desktop app
+- Backend searches the web for relevant news and images
+- For each image, the agent captions (vision) and asks an LLM to score and describe damage in JSON
+- The system aggregates severity and priorities across locations
+- It renders charts and compiles an executive markdown report (with a technical appendix)
+- In parallel, operators can run built‑up change detection (upload pre/post) and big‑area road extraction for logistics planning
+
+11) Suggested future enhancements
+- Swap Google Custom Search with first‑party news APIs when needed
+- Plug a local VLM for robust, offline captioning and damage detection
+- Add vector outputs (GeoJSON) for detected changes/roads where models support it
+- Introduce API auth + request budgeting and metrics
+- Package model paths and secrets via config (.env.example + environment mapping)
+
+End of document.

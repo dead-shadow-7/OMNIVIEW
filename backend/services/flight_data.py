@@ -26,7 +26,7 @@ def fetch_flights():
                 print("API error:", res.status_code)
         except Exception as e:
             print("Fetch failed:", e)
-        time.sleep(30)  # update every 30s
+        time.sleep(240)  # update every 4 minutes
 
 def get_flights_data():
     """Get the current flight data"""
