@@ -29,6 +29,8 @@ from services.flight_data import start_flight_tracker, get_flights_data
 from road_extract import road_extract_bp
 # Import the change detection service
 from change_detection import detect_building_changes
+# Import the land cover segmentation blueprint
+from landcover import landcover_bp
 
 # Load environment variables
 load_dotenv()
@@ -60,6 +62,7 @@ from flask import send_file
 
 app.register_blueprint(road_bp)
 app.register_blueprint(road_extract_bp)
+app.register_blueprint(landcover_bp)
 
 class DisasterResponseAgent:
     def __init__(self):

@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 
 road_extract_bp = Blueprint('road_extract', __name__)
 
-MODEL_PATH = "C:\\Users\\Lenovo\\Downloads\\Road_model-20250928T160753Z-1-001\\Road_model\\road_detection_resnet_e50.h5"  # Update as needed
+MODEL_PATH = "C:\\Users\\Vinit\\Desktop\\projects\\Omnivu\\OMNIVIEW\\backend\\road_detection_resnet_e50.h5"  # Update as needed
 TARGET_SIZE = (256, 256)
 PATCH_SIZE = (500, 500)
 NUM_CROPS = 8
