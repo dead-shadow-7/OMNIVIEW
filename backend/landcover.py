@@ -17,7 +17,7 @@ import os
 landcover_bp = Blueprint('landcover', __name__)
 
 # ── Model path ──────────────────────────────────────────────────────────────
-MODEL_PATH = r"C:\Users\Vinit\Downloads\unet_poland_ds_modelv1.onnx"
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "ml_models", "unet_poland_ds_modelv1.onnx")
 
 # ── Class definitions ───────────────────────────────────────────────────────
 CLASS_NAMES = ['Background', 'Buildings', 'Trees/Greens', 'Water', 'Road']
