@@ -4,19 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OmniView</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
     <link rel="stylesheet" href="disaster.css" />
-    <!-- in <head> -->
-<link
-  rel="stylesheet"
-  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-  crossorigin=""
-/>
-<script
-  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-  crossorigin=""
-></script>
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
   </head>
   <body>
     <!-- Main Container -->
@@ -28,19 +27,19 @@
             <div class="sidebar-title active-screen" id="sidebarTitle">
               DISASTER
             </div>
-            <div class="dropdown-arrow">▼</div>
+            <div class="dropdown-arrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>
           </div>
           <div class="screen-dropdown" id="screenDropdown">
             <div class="dropdown-item" data-screen="monitoring">
-              <div class="dropdown-icon">📊</div>
+              <div class="dropdown-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
               <span>MONITORING</span>
             </div>
             <div class="dropdown-item active" data-screen="disaster">
-              <div class="dropdown-icon">⚠️</div>
+              <div class="dropdown-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
               <span>DISASTER</span>
             </div>
             <div class="dropdown-item" data-screen="analytics">
-              <div class="dropdown-icon">📈</div>
+              <div class="dropdown-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
               <span>ANALYTICS</span>
             </div>
           </div>
@@ -48,20 +47,20 @@
 
         <div class="menu-section">
           <div class="menu-item active" data-section="news">
-            <div class="item-icon">📰</div>
+            <div class="item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><line x1="10" y1="6" x2="18" y2="6"/><line x1="10" y1="10" x2="18" y2="10"/><line x1="10" y1="14" x2="14" y2="14"/></svg></div>
             <span>News</span>
           </div>
           <div class="menu-item" data-section="post-disaster">
-            <div class="item-icon">🚨</div>
+            <div class="item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
             <span>Post Disaster</span>
           </div>
           <div class="menu-item" data-section="pre-disaster">
-            <div class="item-icon">⚠️</div>
+            <div class="item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
             <span>Pre Disaster</span>
           </div>
-                    <div class="menu-item" data-section="post-disaster-report" id="postReportMenuItem">
-            <div class="item-icon">⚠️</div>
-            <span>Post Disaster report generator</span>
+          <div class="menu-item" data-section="post-disaster-report" id="postReportMenuItem">
+            <div class="item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+            <span>Report Generator</span>
           </div>
         </div>
 
@@ -80,7 +79,6 @@
               placeholder="Search for news, disasters, or alerts..."
             />
             <button class="search-btn" id="searchBtn">Search</button>
-            <!-- <button class="report-btn" id="reportBtn">Generate Report</button> -->
           </div>
         </div>
 
@@ -101,37 +99,33 @@
   </div>
 
 <!-- Post Disaster Report Generator (separate view, no map) -->
-<div class="post-disaster-report" id="postDisasterReportSection" style="display: none; padding:12px;">
-  <div class="search-container" style="margin: 12px 0;">
-    <div class="search-box" style="display:flex; gap:8px; align-items:center;">
+<div class="post-disaster-report" id="postDisasterReportSection" style="display: none;">
+  <div class="search-container">
+    <div class="search-box">
       <input
         type="text"
         class="search-input"
         id="postReportInput"
         placeholder="Search for incidents, locations, or keywords..."
-        style="flex:1; padding:8px 12px; border-radius:6px; border:1px solid #444; background:#111; color:#fff;"
       />
-      <button class="report-btn" id="postReportGenerateBtn" style="padding:8px 12px; border-radius:6px; background:#007bff; color:#fff; border:none; cursor:pointer;">Generate Report</button>
+      <button class="report-btn" id="postReportGenerateBtn">Generate Report</button>
     </div>
   </div>
 </div>
 
 <!-- Post Disaster Section (MAP here) -->
-
 <div class="post-disaster-section" id="postDisasterSection" style="display: none;">
   <!-- Filters + Generate Button -->
-  <div class="section-title" style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+  <div class="section-title">
     <div>
-      <select id="countryFilter" style="padding:6px 12px; border-radius:6px; background:#222; color:#fff; border:1px solid #444;">
+      <select id="countryFilter">
         <option value="">All Countries</option>
-        <!-- Countries populated dynamically -->
       </select>
-      <select id="yearFilter" style="padding:6px 12px; border-radius:6px; background:#222; color:#fff; border:1px solid #444;">
+      <select id="yearFilter">
         <option value="">All Years</option>
-        <!-- Years populated dynamically -->
       </select>
     </div>
-    <button id="generateAnalysisBtn" class="analysis-btn" style="padding:6px 12px; border-radius:6px; background:#007bff; color:#fff; border:none; cursor:pointer;">
+    <button id="generateAnalysisBtn" class="analysis-btn">
       Generate Analysis
     </button>
   </div>
@@ -140,7 +134,7 @@
   <div id="map" style="position: relative;"></div>
 
   <!-- Legend -->
-  <div class="disaster-legend" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:10px; font-size:14px;">
+  <div class="disaster-legend">
     <div>🌊 Flood</div>
     <div>🌋 Earthquake</div>
     <div>🌀 Cyclone</div>
@@ -171,9 +165,9 @@
 
 <!-- Pre-Disaster Section -->
 <div class="pre-disaster-section" id="preDisasterContent" style="display: none;">
-  <div id="preWeatherHeadline" class="weather-headline" style="margin-bottom:16px;"></div>
-  <div class="section-title" style="margin-top:0;">Pre-Disaster Weather Explorer</div>
-  <div id="preDisasterMap" class="map-container" style="width:100%; height:400px; border-radius:8px; box-shadow:0 2px 8px #0003;"></div>
+  <div id="preWeatherHeadline" class="weather-headline"></div>
+  <div class="section-title">Pre-Disaster Weather Explorer</div>
+  <div id="preDisasterMap" class="map-container"></div>
 </div>
 
 <!-- Bottom Panel -->

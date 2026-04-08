@@ -14,7 +14,6 @@
     />
     <!-- Turf for geospatial calculations -->
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
-    <!-- Note: leaflet and draw scripts are loaded at bottom -->
     <link rel="stylesheet" href="analysis.css" />
   </head>
   <body>
@@ -26,46 +25,46 @@
             <div class="sidebar-title active-screen" id="sidebarTitle">
               ANALYTICS
             </div>
-            <div class="dropdown-arrow">▼</div>
+            <div class="dropdown-arrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>
           </div>
           <div class="screen-dropdown" id="screenDropdown">
             <div class="dropdown-item" data-screen="monitoring">
-              <div class="dropdown-icon">📊</div>
+              <div class="dropdown-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
               <span>MONITORING</span>
             </div>
             <div class="dropdown-item" data-screen="disaster">
-              <div class="dropdown-icon">⚠️</div>
+              <div class="dropdown-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
               <span>DISASTER</span>
             </div>
             <div class="dropdown-item active" data-screen="analytics">
-              <div class="dropdown-icon">📈</div>
+              <div class="dropdown-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
               <span>ANALYTICS</span>
             </div>
           </div>
         </div>
         <div class="analytics-section">
           <div class="analytics-item" data-section="analytics" style="display: none;">
-            <div class="item-icon">📊</div>
+            <div class="item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
             <span>Area Analysis</span>
           </div>
           <div class="analytics-item" data-section="trends" style="display: none;">
-            <div class="item-icon">📈</div>
+            <div class="item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
             <span>Trends</span>
           </div>
           <div class="analytics-item" data-section="classification" style="display: none;">
-            <div class="item-icon">🗺️</div>
+            <div class="item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></div>
             <span>Classification</span>
           </div>
           <div class="analytics-item" data-section="ndvi" style="display: none;">
-            <div class="item-icon">🌿</div>
+            <div class="item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75"/></svg></div>
             <span>NDVI Analysis</span>
           </div>
           <div class="analytics-item active" data-section="bigroads">
-            <div class="item-icon">🛣️</div>
+            <div class="item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19L20 5"/><path d="M4 5l4 0"/><path d="M16 19h4"/></svg></div>
             <span>Road Extraction</span>
           </div>
           <div class="analytics-item" data-section="landcover">
-            <div class="item-icon">🌍</div>
+            <div class="item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></div>
             <span>Land Cover</span>
           </div>
         </div>
@@ -99,7 +98,7 @@
                 <div class="map-toolbar">
                   <button id="drawBtn" class="action-btn small">Draw Area</button>
                   <button id="clearSelection" class="action-btn small">Clear</button>
-                  <span id="mapHint" style="margin-left:12px;color:#bcd;">Draw polygon to analyze</span>
+                  <span id="mapHint" class="hint-text">Draw polygon to analyze</span>
                 </div>
                 <div id="map" class="full-map"></div>
                 <div class="map-mini-controls">
@@ -108,7 +107,7 @@
               </div>
               <div id="analysisResults" class="results-panel">
                 <h3>Selection Results</h3>
-                <div id="resultsContent" style="overflow:auto; max-height:calc(100vh - 160px); padding-right:8px;">
+                <div id="resultsContent">
                   <div id="summary" class="result-block">No area selected.</div>
                   <div id="landuseBreakdown" class="result-block"></div>
                   <div id="rawGeojson" class="result-block" style="display:none;"></div>
@@ -117,56 +116,56 @@
             </div>
 
             <!-- Big Roads Extraction: explanatory content + upload form -->
-            <div id="bigroadsSection" class="bigroads-section" style="display:block; padding:20px;">
-              <h2 style="color:#ffb74d; margin:0 0 12px;">🛣️ Extract Big Roads (Sentinel-2)</h2>
-              <p style="color:#cfefff; max-width:900px; margin-bottom:12px;">
+            <div id="bigroadsSection" class="bigroads-section" style="display:block;">
+              <h2 class="section-heading">Extract Big Roads (Sentinel-2)</h2>
+              <p class="section-description">
                 Use this feature to extract major road networks from Sentinel-2 satellite imagery.
                 Upload a GeoTIFF (Sentinel-2 or similar) and the AI model will generate:
               </p>
-              <ul style="color:#bfe8ff; margin-top:0; margin-bottom:16px;">
+              <ul class="section-list">
                 <li>Original image (PNG preview)</li>
                 <li>Processed binary road mask (PNG)</li>
                 <li>Overlay image with detected roads highlighted</li>
               </ul>
-              <p style="color:#d0eefc; max-width:900px; margin-bottom:18px;">
+              <p class="section-description">
                 Notes: Large TIFFs can be sizable — processing may take several minutes depending on image resolution and your system. If you run into memory or timeout issues, try a smaller tile or run the model locally with the instructions in the README.
               </p>
 
-              <form id="bigRoadsForm" style="display:flex; flex-direction:column; gap:12px; max-width:900px;">
-                <label style="color:#cfefff;">
+              <form id="bigRoadsForm">
+                <label class="form-label">
                   Select Sentinel-2 TIFF file:
-                  <input id="sentinelFile" type="file" accept=".tif,.tiff" style="display:block; margin-top:8px;"/>
+                  <input id="sentinelFile" type="file" accept=".tif,.tiff"/>
                 </label>
-                <div style="display:flex; gap:12px; align-items:center;">
+                <div class="form-actions">
                   <button id="runExtractionBtn" class="action-btn" type="submit">Run Extraction</button>
                   <button id="toggleOverlayBtn" class="action-btn small" type="button">Toggle Overlay</button>
-                  <div id="bigRoadsStatus" style="color:#ffd; margin-left:12px;">Ready to upload</div>
+                  <div id="bigRoadsStatus" class="status-text">Ready to upload</div>
                 </div>
               </form>
 
-              <div id="bigRoadsResults" style="display:none; margin-top:18px; max-width:1100px;">
-                <h3 style="color:#ffd27a; margin-bottom:8px;">Results</h3>
-                <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                  <div style="flex:1 1 320px; min-width:280px; background:#1a1a1a; padding:8px; border-radius:8px;">
-                    <h4 style="margin:6px 0; color:#bfe8ff;">Original Image</h4>
-                    <div id="bigRoadsOrig" style="width:100%; height:300px; background:#0f0f0f; display:flex; align-items:center; justify-content:center; border-radius:6px;">
-                      <span style="color:#4b8; opacity:0.6;">No image</span>
+              <div id="bigRoadsResults" style="display:none;">
+                <h3 class="results-heading">Results</h3>
+                <div class="results-columns">
+                  <div class="result-card">
+                    <h4 class="result-card-title">Original Image</h4>
+                    <div id="bigRoadsOrig" class="image-container">
+                      <span class="placeholder-text">No image</span>
                     </div>
                   </div>
-                  <div style="flex:1 1 320px; min-width:280px; background:#1a1a1a; padding:8px; border-radius:8px;">
-                    <h4 style="margin:6px 0; color:#bfe8ff;">Road Mask</h4>
-                    <div id="bigRoadsMask" style="width:100%; height:300px; background:#0f0f0f; display:flex; align-items:center; justify-content:center; border-radius:6px;">
-                      <span style="color:#ff8; opacity:0.6;">No mask</span>
+                  <div class="result-card">
+                    <h4 class="result-card-title">Road Mask</h4>
+                    <div id="bigRoadsMask" class="image-container">
+                      <span class="placeholder-text">No mask</span>
                     </div>
                   </div>
-                  <div style="flex:1 1 320px; min-width:280px; background:#1a1a1a; padding:8px; border-radius:8px;">
-                    <h4 style="margin:6px 0; color:#bfe8ff;">Overlay</h4>
-                    <div id="bigRoadsOverlay" style="width:100%; height:300px; background:#0f0f0f; display:flex; align-items:center; justify-content:center; border-radius:6px;">
-                      <span style="color:#8cf; opacity:0.6;">No overlay</span>
+                  <div class="result-card">
+                    <h4 class="result-card-title">Overlay</h4>
+                    <div id="bigRoadsOverlay" class="image-container">
+                      <span class="placeholder-text">No overlay</span>
                     </div>
                   </div>
                 </div>
-                <p style="color:#bcd; margin-top:12px; font-size:0.95rem;">
+                <p class="results-hint">
                   You can right-click and save any result image. Use the Toggle Overlay button to adjust overlay visibility.
                 </p>
               </div>
@@ -176,49 +175,49 @@
           <!-- END analyticsContainer -->
 
           <!-- Land Cover Segmentation Section -->
-          <div id="landcoverSection" style="display:none; padding:20px;">
-            <h2 style="color:#ffb74d; margin:0 0 12px;">🌍 Land Cover Segmentation</h2>
-            <p style="color:#cfefff; max-width:900px; margin-bottom:12px;">
+          <div id="landcoverSection" style="display:none;">
+            <h2 class="section-heading">Land Cover Segmentation</h2>
+            <p class="section-description">
               Click on the satellite map to select a location. The AI model will fetch a
               256×256 satellite tile and classify every pixel into one of five land-cover classes.
             </p>
-            <div style="display:flex; gap:14px; flex-wrap:wrap; margin-bottom:16px; font-family:monospace; font-size:13px;">
-              <span style="color:#4A235A; padding:4px 10px; background:rgba(0,255,65,0.08); border:1px solid #00ff4133; border-radius:6px; font-weight:600;">■ Background</span>
-              <span style="color:#FFB900; padding:4px 10px; background:rgba(0,255,65,0.08); border:1px solid #00ff4133; border-radius:6px; font-weight:600;">■ Buildings</span>
-              <span style="color:#0FFF00; padding:4px 10px; background:rgba(0,255,65,0.08); border:1px solid #00ff4133; border-radius:6px; font-weight:600;">■ Trees / Greens</span>
-              <span style="color:#008BFF; padding:4px 10px; background:rgba(0,255,65,0.08); border:1px solid #00ff4133; border-radius:6px; font-weight:600;">■ Water</span>
-              <span style="color:#FFF600; padding:4px 10px; background:rgba(0,255,65,0.08); border:1px solid #00ff4133; border-radius:6px; font-weight:600;">■ Road</span>
+            <div class="lc-legend">
+              <span class="lc-legend-item" style="color:#4A235A;">■ Background</span>
+              <span class="lc-legend-item" style="color:#FFB900;">■ Buildings</span>
+              <span class="lc-legend-item" style="color:#0FFF00;">■ Trees / Greens</span>
+              <span class="lc-legend-item" style="color:#008BFF;">■ Water</span>
+              <span class="lc-legend-item" style="color:#FFF600;">■ Road</span>
             </div>
 
-            <div style="display:flex; gap:12px; align-items:center; margin-bottom:14px;">
+            <div class="lc-controls">
               <button id="lcSelectAreaBtn" class="action-btn">Select Area on Map</button>
               <button id="lcClearBtn" class="action-btn small" type="button">Clear</button>
-              <div id="lcStatus" style="color:#ffd; margin-left:12px;">Click the map to pick a location</div>
+              <div id="lcStatus" class="status-text">Click the map to pick a location</div>
             </div>
 
-            <div id="lcMapContainer" style="width:100%; height:450px; border:2px solid #00ff4188; margin-bottom:18px; position:relative; background:#0a1628; border-radius:10px; overflow:hidden;">
+            <div id="lcMapContainer">
               <div id="lcMap" style="width:100%; height:100%;"></div>
             </div>
 
-            <div id="lcResults" style="display:none; margin-top:14px;">
-              <h3 style="color:#ffd27a; margin-bottom:8px;">Results</h3>
-              <div style="display:flex; gap:14px; flex-wrap:wrap;">
-                <div style="flex:1 1 280px; min-width:240px; background:#1a1a1a; padding:10px; border-radius:8px;">
-                  <h4 style="margin:6px 0; color:#bfe8ff;">Original Tile</h4>
-                  <div id="lcOriginal" style="width:100%; height:260px; background:#0f0f0f; display:flex; align-items:center; justify-content:center; border-radius:6px;">
-                    <span style="color:#4b8; opacity:0.6;">No image</span>
+            <div id="lcResults" style="display:none;">
+              <h3 class="results-heading">Results</h3>
+              <div class="results-columns">
+                <div class="result-card">
+                  <h4 class="result-card-title">Original Tile</h4>
+                  <div id="lcOriginal" class="image-container lc-image">
+                    <span class="placeholder-text">No image</span>
                   </div>
                 </div>
-                <div style="flex:1 1 280px; min-width:240px; background:#1a1a1a; padding:10px; border-radius:8px;">
-                  <h4 style="margin:6px 0; color:#bfe8ff;">Segmentation Mask</h4>
-                  <div id="lcMask" style="width:100%; height:260px; background:#0f0f0f; display:flex; align-items:center; justify-content:center; border-radius:6px;">
-                    <span style="color:#ff8; opacity:0.6;">No mask</span>
+                <div class="result-card">
+                  <h4 class="result-card-title">Segmentation Mask</h4>
+                  <div id="lcMask" class="image-container lc-image">
+                    <span class="placeholder-text">No mask</span>
                   </div>
                 </div>
-                <div style="flex:1 1 320px; min-width:260px; background:#1a1a1a; padding:10px; border-radius:8px;">
-                  <h4 style="margin:6px 0; color:#bfe8ff;">Class Distribution</h4>
-                  <div id="lcChartBars" style="padding:8px 0;"></div>
-                  <div id="lcClassList" style="margin-top:8px; font-size:13px; color:#cfe;"></div>
+                <div class="result-card" style="flex: 1 1 320px; min-width: 260px;">
+                  <h4 class="result-card-title">Class Distribution</h4>
+                  <div id="lcChartBars"></div>
+                  <div id="lcClassList"></div>
                 </div>
               </div>
             </div>
@@ -333,9 +332,9 @@
         var r = document.getElementById('lcResults');
         if (r) r.style.display = '';
         var orig = document.getElementById('lcOriginal');
-        if (orig) orig.innerHTML = '<img src="' + data.original + '" style="width:100%;height:100%;object-fit:contain;border-radius:6px;" />';
+        if (orig) orig.innerHTML = '<img src="' + data.original + '" class="result-img" />';
         var mask = document.getElementById('lcMask');
-        if (mask) mask.innerHTML = '<img src="' + data.mask + '" style="width:100%;height:100%;object-fit:contain;border-radius:6px;" />';
+        if (mask) mask.innerHTML = '<img src="' + data.mask + '" class="result-img" />';
 
         // Pure HTML bar chart — no Chart.js dependency
         var bars = document.getElementById('lcChartBars');
@@ -344,15 +343,15 @@
         if (data.classes && data.classes.length) {
           var maxPct = Math.max.apply(null, data.classes.map(function(c){ return c.percentage; }));
           if (maxPct <= 0) maxPct = 1;
-          var titleHtml = '<div style="color:#cfe;font-size:12px;margin-bottom:10px;text-align:center;">Land Cover \u2014 ' + lat.toFixed(3) + '\u00b0N, ' + lng.toFixed(3) + '\u00b0E</div>';
+          var titleHtml = '<div class="bar-chart-title">Land Cover \u2014 ' + lat.toFixed(3) + '\u00b0N, ' + lng.toFixed(3) + '\u00b0E</div>';
           var barsHtml = data.classes.map(function(c, i) {
             var widthPct = Math.max((c.percentage / maxPct) * 100, 2);
-            return '<div style="display:flex;align-items:center;margin-bottom:6px;">'
-              + '<span style="width:90px;font-size:11px;color:' + barColors[i] + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + c.name + '</span>'
-              + '<div style="flex:1;height:20px;background:#0a0a0a;border-radius:4px;margin:0 8px;overflow:hidden;">'
-              + '<div style="width:' + widthPct + '%;height:100%;background:' + barColors[i] + ';border-radius:4px;transition:width 0.4s;"></div>'
+            return '<div class="bar-chart-row">'
+              + '<span class="bar-chart-label" style="color:' + barColors[i] + ';">' + c.name + '</span>'
+              + '<div class="bar-chart-track">'
+              + '<div class="bar-chart-fill" style="width:' + widthPct + '%;background:' + barColors[i] + ';"></div>'
               + '</div>'
-              + '<span style="min-width:52px;text-align:right;font-size:12px;color:#eee;">' + c.percentage + '%</span>'
+              + '<span class="bar-chart-value">' + c.percentage + '%</span>'
               + '</div>';
           }).join('');
           if (bars) bars.innerHTML = titleHtml + barsHtml;
@@ -360,11 +359,11 @@
           // Text class list below the bars
           if (list) {
             list.innerHTML = data.classes.map(function (c, i) {
-              return '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span style="color:' + barColors[i] + ';">\u25a0 ' + c.name + '</span><span>' + c.count.toLocaleString() + ' px (' + c.percentage + '%)</span></div>';
+              return '<div class="class-list-row"><span style="color:' + barColors[i] + ';">\u25a0 ' + c.name + '</span><span>' + c.count.toLocaleString() + ' px (' + c.percentage + '%)</span></div>';
             }).join('');
           }
         } else {
-          if (bars) bars.innerHTML = '<div style="color:#f88;padding:12px;">No class data returned</div>';
+          if (bars) bars.innerHTML = '<div class="bar-chart-title" style="color:var(--red);">No class data returned</div>';
           if (list) list.innerHTML = '';
         }
       }
@@ -382,8 +381,8 @@
         if (clr) clr.addEventListener('click', function () {
           if (lcMarker && lcMap) { lcMap.removeLayer(lcMarker); lcMarker = null; }
           var r = document.getElementById('lcResults'); if (r) r.style.display = 'none';
-          var o = document.getElementById('lcOriginal'); if (o) o.innerHTML = '<span style="color:#4b8;opacity:0.6;">No image</span>';
-          var m = document.getElementById('lcMask'); if (m) m.innerHTML = '<span style="color:#ff8;opacity:0.6;">No mask</span>';
+          var o = document.getElementById('lcOriginal'); if (o) o.innerHTML = '<span class="placeholder-text">No image</span>';
+          var m = document.getElementById('lcMask'); if (m) m.innerHTML = '<span class="placeholder-text">No mask</span>';
           var l = document.getElementById('lcClassList'); if (l) l.innerHTML = '';
           var b = document.getElementById('lcChartBars'); if (b) b.innerHTML = '';
           var s = document.getElementById('lcStatus'); if (s) s.textContent = 'Click the map to pick a location';

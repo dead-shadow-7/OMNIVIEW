@@ -1,0 +1,361 @@
+/* OmniView — Shared Theme */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg-primary: #0f1419;
+  --bg-secondary: #151c24;
+  --bg-tertiary: #1c2530;
+  --bg-elevated: #222d3a;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.15);
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --accent-subtle: rgba(59, 130, 246, 0.12);
+  --accent-glow: rgba(59, 130, 246, 0.25);
+  --green: #10b981;
+  --green-hover: #059669;
+  --green-subtle: rgba(16, 185, 129, 0.12);
+  --red: #ef4444;
+  --red-hover: #dc2626;
+  --orange: #f59e0b;
+  --cyan: #06b6d4;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
+body {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow: hidden;
+}
+
+/* ── Main Container ── */
+.main-container {
+  display: flex;
+  height: 100vh;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 260px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.sidebar-header {
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  position: relative;
+  z-index: 1002;
+}
+
+.sidebar-title-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  transition: background 0.2s;
+  user-select: none;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+}
+
+.sidebar-title-container:hover {
+  background: var(--bg-elevated);
+}
+
+.sidebar-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.active-screen {
+  color: var(--accent);
+}
+
+.dropdown-arrow {
+  font-size: 11px;
+  color: var(--text-secondary);
+  transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.dropdown-arrow.rotated {
+  transform: rotate(180deg);
+}
+
+/* ── Screen Dropdown ── */
+.screen-dropdown {
+  position: absolute;
+  top: calc(100% - 4px);
+  left: 16px;
+  right: 16px;
+  background: var(--bg-elevated);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 1002;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all 0.2s ease;
+  padding: 4px;
+}
+
+.screen-dropdown.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.dropdown-item:hover {
+  background: var(--accent-subtle);
+  color: var(--text-primary);
+}
+
+.dropdown-item.active {
+  background: var(--accent-subtle);
+  color: var(--accent);
+}
+
+.dropdown-icon {
+  width: 28px;
+  height: 28px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  border: 1px solid var(--border-subtle);
+}
+
+/* ── Item Icon (shared across sidebar menus) ── */
+.item-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  border: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+/* ── Bottom Panel (Logs) ── */
+.bottom-panel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 140px;
+  background: rgba(15, 20, 25, 0.92);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border-subtle);
+  z-index: 1100;
+  transition: height 0.25s ease;
+}
+
+.bottom-panel .panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: transparent;
+  gap: 8px;
+}
+
+.panel-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.expand-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-weight: 500;
+  font-family: inherit;
+}
+
+.expand-btn:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+/* ── Logs ── */
+.logs-content {
+  padding: 10px 16px;
+  font-size: 12px;
+  font-family: "JetBrains Mono", monospace;
+  line-height: 1.7;
+  max-height: calc(100% - 42px);
+  overflow-y: auto;
+}
+
+.logs-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.logs-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.logs-content::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 4px;
+}
+
+.log-info {
+  color: var(--cyan);
+}
+
+.log-success {
+  color: var(--green);
+}
+
+.log-warning {
+  color: var(--orange);
+}
+
+.log-error {
+  color: var(--red);
+}
+
+.log-timestamp {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+/* ── Shared Scrollbar ── */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 4px;
+}
+
+/* ── Leaflet Zoom Control ── */
+.leaflet-control-zoom {
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+  background: rgba(15, 20, 25, 0.9) !important;
+  backdrop-filter: blur(12px) !important;
+  width: 36px !important;
+  height: 36px !important;
+  line-height: 36px !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--text-secondary) !important;
+  font-size: 16px !important;
+  margin-bottom: 4px !important;
+  border: 1px solid var(--border-default) !important;
+  transition: all 0.15s !important;
+}
+
+.leaflet-control-zoom-in:hover,
+.leaflet-control-zoom-out:hover {
+  background: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ── Leaflet Popup Dark Theme ── */
+.leaflet-popup-content-wrapper {
+  background: rgba(15, 20, 25, 0.95) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+  color: var(--text-primary) !important;
+  padding: 0 !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.leaflet-popup-tip {
+  background: rgba(15, 20, 25, 0.95) !important;
+  border: 1px solid var(--border-default) !important;
+  border-top: none !important;
+  border-left: none !important;
+}
+
+.leaflet-popup-close-button {
+  color: var(--text-muted) !important;
+  font-size: 18px !important;
+  width: 28px !important;
+  height: 28px !important;
+  top: 10px !important;
+  right: 10px !important;
+  z-index: 10;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.15s;
+}
+
+.leaflet-popup-close-button:hover {
+  background: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+}

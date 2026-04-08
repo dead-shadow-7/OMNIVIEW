@@ -225,9 +225,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!resp.ok) throw new Error("Processing failed");
         const data = await resp.json();
         // data: { orig_url, mask_url, overlay_url }
-        bigRoadsOrig.innerHTML = `<img src="${data.orig_url}" style="width:100%;height:100%;object-fit:contain;"/>`;
-        bigRoadsMask.innerHTML = `<img src="${data.mask_url}" style="width:100%;height:100%;object-fit:contain;"/>`;
-        bigRoadsOverlay.innerHTML = `<img id="overlayImg" src="${data.overlay_url}" style="width:100%;height:100%;object-fit:contain;"/>`;
+        bigRoadsOrig.innerHTML = `<img src="${data.orig_url}" class="result-img"/>`;
+        bigRoadsMask.innerHTML = `<img src="${data.mask_url}" class="result-img"/>`;
+        bigRoadsOverlay.innerHTML = `<img id="overlayImg" src="${data.overlay_url}" class="result-img"/>`;
         bigRoadsResults.style.display = "";
         bigRoadsStatus.textContent = "Extraction complete!";
         overlayMode = true;
@@ -591,21 +591,21 @@ document.addEventListener('DOMContentLoaded', () => {
           circle: false, 
           rectangle: {
             shapeOptions: {
-              color: '#00ff41',
+              color: '#3b82f6',
               weight: 3,
               fillOpacity: 0.2,
-              fillColor: '#00ff41'
+              fillColor: '#3b82f6'
             }
-          }, 
-          circlemarker: false, 
+          },
+          circlemarker: false,
           polygon: {
-            allowIntersection: false, 
+            allowIntersection: false,
             showArea: true,
             shapeOptions: {
-              color: '#00ff41',
+              color: '#3b82f6',
               weight: 3,
               fillOpacity: 0.2,
-              fillColor: '#00ff41'
+              fillColor: '#3b82f6'
             }
           }
         },
@@ -749,14 +749,14 @@ document.addEventListener('DOMContentLoaded', () => {
       // Landcover breakdown
       resultsHtml += `
         <div class="result-block">
-          <h4>🌍 Landcover Analysis</h4>
-          <div style="margin: 10px 0;">
+          <h4>Landcover Analysis</h4>
+          <div>
       `;
-      
+
       Object.entries(mockBreakdown).forEach(([type, data]) => {
         const percentage = ((data.area / areaM2) * 100).toFixed(1);
         resultsHtml += `
-          <div style="display: flex; justify-content: space-between; margin: 5px 0; padding: 5px; background: rgba(0,255,65,0.1); border-radius: 4px;">
+          <div class="landuse-row">
             <span>${data.icon} ${type}</span>
             <span>${percentage}% (${Math.round(data.area).toLocaleString()} m²)</span>
           </div>
@@ -782,9 +782,9 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="result-block">
           <h4>⚠️ Risk Assessment</h4>
           ${riskFactors.map(risk => `
-            <div style="margin: 8px 0; padding: 6px; background: rgba(${risk.color}, 0.2); border-radius: 4px;">
-              <strong>${risk.type}:</strong> ${risk.level} 
-              <div style="font-size: 12px; opacity: 0.8;">${risk.reason}</div>
+            <div class="risk-item" style="background: rgba(${risk.color}, 0.2);">
+              <strong>${risk.type}:</strong> ${risk.level}
+              <div class="risk-reason">${risk.reason}</div>
             </div>
           `).join('')}
         </div>

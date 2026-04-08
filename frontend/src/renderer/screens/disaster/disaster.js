@@ -450,7 +450,7 @@ downloadReportBtn.addEventListener("click", function () {
   document.querySelector(".expand-btn").addEventListener("click", function () {
     const e = document.querySelector(".bottom-panel");
     "300px" === e.style.height
-      ? ((e.style.height = "120px"), (this.textContent = "Expand ▲"))
+      ? ((e.style.height = "140px"), (this.textContent = "Expand ▲"))
       : ((e.style.height = "300px"), (this.textContent = "Collapse ▼"));
   }),
   document
@@ -561,10 +561,10 @@ function initPreDisasterMap() {
       .then((data) => {
         const w = data.current;
         const headline = `
-          <div style="color:#ffd700; font-size:1.2rem; font-weight:bold; margin-bottom:8px;">
-            Weather at (${lat.toFixed(2)}, ${lng.toFixed(2)}): 
-            ${w.temperature_2m}°C, ${w.precipitation}mm rain, ${w.windspeed_10m}km/h wind, ${w.cloud_cover}% clouds.
-            <span style="color:#64b5f6; margin-left:12px;"><b>AI:</b> ${getAISummary(w)}</span>
+          <div>
+            <span class="weather-temp">Weather at (${lat.toFixed(2)}, ${lng.toFixed(2)}):
+            ${w.temperature_2m}°C, ${w.precipitation}mm rain, ${w.windspeed_10m}km/h wind, ${w.cloud_cover}% clouds.</span>
+            <span class="weather-ai-summary"><b>AI:</b> ${getAISummary(w)}</span>
           </div>
         `;
         document.getElementById("preWeatherHeadline").innerHTML = headline;
