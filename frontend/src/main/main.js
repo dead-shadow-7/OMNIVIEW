@@ -166,6 +166,16 @@ function createWindow() {
   });
   const e = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(e);
+
+  // Add Referer header for OSM tile requests (required by usage policy)
+  const { session } = require("electron");
+  session.defaultSession.webRequest.onBeforeSendHeaders(
+    { urls: ["https://*.tile.openstreetmap.org/*"] },
+    (details, callback) => {
+      details.requestHeaders["Referer"] = "https://omniview.app";
+      callback({ requestHeaders: details.requestHeaders });
+    }
+  );
 }
 (app.whenReady().then(() => {
   (createWindow(),

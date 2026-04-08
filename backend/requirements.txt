@@ -1,15 +1,25 @@
 flask
 flask-cors
 requests
-gradio-client
-pandas
+python-dotenv
+google-generativeai
 pillow
+numpy
+pandas
+matplotlib
+opencv-python-headless
+tqdm
+feedparser
 tweepy
 praw
 exifread
-spacy
-tqdm
-transformers
 geopy
-feedparser
 onnxruntime
+gradio-client
+seaborn
+rasterio
+spacy
+tensorflow
+torch --index-url https://download.pytorch.org/whl/cpu
+torchvision --index-url https://download.pytorch.org/whl/cpu
+transformers
