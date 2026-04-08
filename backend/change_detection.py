@@ -11,7 +11,7 @@ import io
 import base64
 
 # Model path configuration - UPDATE THIS PATH TO YOUR MODEL FILE
-MODEL_PATH = "C:\\Users\\Vinit\\Desktop\\isro\\nrsc\\ISRO_F\\ISRO_NRSC\\unet_builtup_cd.pth"  # Change this to your actual model path
+MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ml_models", "unet_builtup_cd.pth")
 
 # --- UNet Model Definition ---
 class UNet(nn.Module):

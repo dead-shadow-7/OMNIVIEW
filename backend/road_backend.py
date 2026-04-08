@@ -3,7 +3,21 @@ import base64
 import tempfile
 import os
 import traceback
-from gradio_client import Client, handle_file
+import numpy as np
+import cv2
+import tensorflow as tf
+
+# Load model once at import time
+MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ml_models", "road_detection_resnet_e50.h5")
+_model = None
+
+def _get_model():
+    global _model
+    if _model is None:
+        print(f"[Road Detection] Loading model from {MODEL_PATH}...")
+        _model = tf.keras.models.load_model(MODEL_PATH)
+        print("[Road Detection] Model loaded successfully.")
+    return _model
 
 # Create a blueprint instead of a Flask app
 road_bp = Blueprint("road_backend", __name__)
@@ -33,7 +47,7 @@ def extract_roads():
     bounds = data.get("bounds")
     return jsonify({"summary": "Roads extracted for selected area."})
 
-# Road detection with Hugging Face model
+# Road detection — local model inference
 @road_bp.route("/api/road-detection", methods=["POST"])
 def road_detection():
     try:
@@ -51,44 +65,31 @@ def road_detection():
 
         image_data = base64.b64decode(b64)
 
-        # Save to a temp file
-        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_file:
-            tmp_file.write(image_data)
-            tmp_file_path = tmp_file.name
+        # Decode image from bytes
+        img_array = np.frombuffer(image_data, dtype=np.uint8)
+        img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+        if img is None:
+            return jsonify({"error": "Could not decode image"}), 400
 
-        print("[Backend] Connecting to Hugging Face Space...")
-        client = Client("Vinit710/road_omniview")  
+        # Preprocess for model
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img_resized = cv2.resize(img_rgb, (256, 256))
+        img_normalized = img_resized / 255.0
+        img_input = np.expand_dims(img_normalized, axis=0)
 
-        print("[Backend] Sending file to HF Space...")
-        result = client.predict(
-            image=handle_file(tmp_file_path),
-            api_name="/predict",
-        )
-        print("[Backend] HF Space returned result!")
+        # Run inference
+        print("[Road Detection] Running local inference...")
+        model = _get_model()
+        pred = model.predict(img_input, verbose=0)[0]  # shape: (256,256,1)
 
-        print("\n=== HF Space raw result ===")
-        print(result)
-        print("=== end result ===\n")
+        # Convert probability mask to image
+        prob_display = (pred.squeeze() * 255).astype(np.uint8)
 
-        # Expecting tuple: (probability_mask_path, binary_mask_path)
-        if not isinstance(result, (list, tuple)) or len(result) < 1:
-            return jsonify({
-                "error": "Unexpected output from HF Space", 
-                "raw_result": result
-            }), 502
+        # Encode as PNG and return as base64
+        _, buffer = cv2.imencode(".png", prob_display)
+        prob_mask_b64 = "data:image/png;base64," + base64.b64encode(buffer).decode()
 
-        prob_mask_path = result[0]
-
-        # Convert to base64
-        with open(prob_mask_path, "rb") as f:
-            prob_mask_b64 = "data:image/webp;base64," + base64.b64encode(f.read()).decode()
-
-        # Clean up temp file
-        try:
-            os.remove(tmp_file_path)
-        except Exception:
-            pass
-
+        print("[Road Detection] Inference complete.")
         return jsonify({
             "probability_mask": prob_mask_b64
         }), 200
