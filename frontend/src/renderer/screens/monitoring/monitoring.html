@@ -458,7 +458,7 @@
               }
               // Start fresh tracking
               updateFlights();
-              updateFlightsInterval = setInterval(updateFlights, 30000);
+              updateFlightsInterval = setInterval(updateFlights, 300000); // 5 minutes
               break;
           }
         });
@@ -587,20 +587,22 @@
               try {
                 logger.info("Capturing map area screenshot...");
                 const mapDiv = document.getElementById("map");
+                const scale = window.devicePixelRatio || 1;
                 const canvas = await html2canvas(mapDiv, {
                   useCORS: true,
                   backgroundColor: null,
+                  scale: scale,
                 });
 
-                // Get pixel coordinates for bounds
-                const nw = map.latLngToContainerPoint(selectedBounds[0]);
-                const se = map.latLngToContainerPoint(selectedBounds[1]);
+                // Get pixel coordinates for bounds (CSS pixels)
+                const sw = map.latLngToContainerPoint(selectedBounds[0]);
+                const ne = map.latLngToContainerPoint(selectedBounds[1]);
 
-                // Calculate crop dimensions
-                const x = Math.min(nw.x, se.x);
-                const y = Math.min(nw.y, se.y);
-                const width = Math.abs(se.x - nw.x);
-                const height = Math.abs(se.y - nw.y);
+                // Scale to canvas pixels to match html2canvas output
+                const x = Math.min(sw.x, ne.x) * scale;
+                const y = Math.min(sw.y, ne.y) * scale;
+                const width = Math.abs(ne.x - sw.x) * scale;
+                const height = Math.abs(ne.y - sw.y) * scale;
 
                 // Crop the canvas
                 const croppedCanvas = document.createElement("canvas");
@@ -741,42 +743,14 @@
       };
 
       // === Aircraft plotting ===
-      // let aircraftLayer = L.layerGroup().addTo(map);
       let updateFlightsInterval;
+      let allFlightStates = []; // Cache all flight data in memory
 
-      // Create plane icon once
-      const planeIcon = L.icon({
-        iconUrl: "../../../assets/airplane.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
-        popupAnchor: [0, -16],
-      });
-
-      async function updateFlights() {
-        try {
-          logger.info("Fetching aircraft data...");
-          const res = await fetch(API_CONFIG.getUrl("FLIGHTS"));
-          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-
-          const data = await res.json();
-
-          // Only update if we're on the aircraft tab
-          if (activeFeature === "aircraft") {
-            featureLayers.aircraft.clearLayers(); // Clear the correct layer
-
-            if (!data.states || !Array.isArray(data.states)) {
-              logger.warning("No flight data available or invalid format");
-              return;
-            }
-
-            const maxPlanes = 500;
-            const planes = data.states.slice(0, maxPlanes);
-
-            function createRotatedPlaneIcon(heading) {
-              const iconHtml = `
+      function createRotatedPlaneIcon(heading) {
+        const iconHtml = `
           <div style="
-            width: 32px; 
-            height: 32px; 
+            width: 32px;
+            height: 32px;
             transform: rotate(${heading}deg);
             transform-origin: center;
             display: flex;
@@ -784,52 +758,93 @@
             justify-content: center;
           ">
             <img src="../../../assets/airplane.png" style="width: 32px; height: 32px;" alt="plane" />
-          </div>
-        `;
+          </div>`;
+        return L.divIcon({
+          html: iconHtml,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
+          popupAnchor: [0, -16],
+          className: "custom-plane-icon",
+        });
+      }
 
-              return L.divIcon({
-                html: iconHtml,
-                iconSize: [32, 32],
-                iconAnchor: [16, 16],
-                popupAnchor: [0, -16],
-                className: "custom-plane-icon",
-              });
-            }
+      const MAX_RENDERED_PLANES = 200;
 
-            let validPlanesCount = 0;
-            planes.forEach((state) => {
-              const lat = state[6];
-              const lon = state[5];
-              const callsign = state[1]?.trim() || "Unknown";
-              const altitude = Math.round((state[7] || 0) * 3.28084);
-              const velocity = Math.round((state[9] || 0) * 2.236936);
-              const heading = state[10];
+      // Render only planes visible in the current map viewport
+      function renderVisiblePlanes() {
+        if (activeFeature !== "aircraft") return;
 
-              if (lat && lon && !isNaN(lat) && !isNaN(lon)) {
-                if (heading !== null && !isNaN(heading)) {
-                  const rotatedIcon = createRotatedPlaneIcon(heading);
-                  const marker = L.marker([lat, lon], { icon: rotatedIcon });
+        featureLayers.aircraft.clearLayers();
+        const bounds = map.getBounds();
 
-                  marker.bindPopup(`
+        // Collect planes in viewport
+        const visible = [];
+        for (const state of allFlightStates) {
+          const lat = state[6];
+          const lon = state[5];
+          const heading = state[10];
+          if (!lat || !lon || isNaN(lat) || isNaN(lon)) continue;
+          if (heading === null || isNaN(heading)) continue;
+          if (!bounds.contains([lat, lon])) continue;
+          visible.push(state);
+        }
+
+        if (visible.length > MAX_RENDERED_PLANES) {
+          logger.warning(
+            `${visible.length} aircraft in view — showing ${MAX_RENDERED_PLANES}. Zoom in for details.`
+          );
+        }
+
+        const toRender = visible.slice(0, MAX_RENDERED_PLANES);
+        for (const state of toRender) {
+          const lat = state[6];
+          const lon = state[5];
+          const heading = state[10];
+          const callsign = state[1]?.trim() || "Unknown";
+          const altitude = Math.round((state[7] || 0) * 3.28084);
+          const velocity = Math.round((state[9] || 0) * 2.236936);
+
+          L.marker([lat, lon], { icon: createRotatedPlaneIcon(heading) })
+            .bindPopup(`
               <b>Flight: ${callsign}</b><br>
               Altitude: ${altitude} ft<br>
               lat: ${lat.toFixed(4)}°, lon: ${lon.toFixed(4)}°<br>
               Speed: ${velocity} mph<br>
-              Heading: ${heading}°
-            `);
+              Heading: ${heading}°`)
+            .addTo(featureLayers.aircraft);
+        }
 
-                  marker.addTo(featureLayers.aircraft); // Add to the correct layer
-                  validPlanesCount++;
-                }
-              }
-            });
+        logger.info(`Showing ${toRender.length} of ${visible.length} aircraft in view`);
+      }
 
-            logger.success(`Updated ${validPlanesCount} aircraft positions`);
+      // Fetch flight data from backend, then render visible planes
+      async function updateFlights() {
+        try {
+          logger.info("Fetching aircraft data...");
+          const res = await fetch(API_CONFIG.getUrl("FLIGHTS"));
+          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+          const data = await res.json();
+          if (!data.states || !Array.isArray(data.states)) {
+            logger.warning("No flight data available or invalid format");
+            allFlightStates = [];
+            return;
           }
+
+          allFlightStates = data.states;
+          logger.success(`Received ${allFlightStates.length} aircraft total`);
+          renderVisiblePlanes();
         } catch (err) {
           logger.error(`Failed to fetch aircraft data: ${err.message}`);
         }
       }
+
+      // Re-render planes when the user pans or zooms
+      map.on("moveend", function () {
+        if (activeFeature === "aircraft" && allFlightStates.length > 0) {
+          renderVisiblePlanes();
+        }
+      });
 
       // Add text-to-speech toggle and clear logs buttons to the panel header
       const panelHeader = document.querySelector(".panel-header");
