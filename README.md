@@ -144,3 +144,5 @@ docker run -p 5000:5000 omniview-backend
 ---
 
 
+replace model path in landcover.py
+

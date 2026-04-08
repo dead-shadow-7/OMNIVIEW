@@ -45,6 +45,8 @@ function initializeVoiceCommands() {
         handleVoiceCommand('fit');
       } else if (command.includes('roads') || command.includes('extract roads')) {
         handleVoiceCommand('roads');
+      } else if (command.includes('land cover') || command.includes('landcover') || command.includes('segmentation')) {
+        handleVoiceCommand('landcover');
       } else if (command.includes('trends')) {
         handleVoiceCommand('trends');
       } else if (command.includes('classification')) {
@@ -78,6 +80,10 @@ function handleVoiceCommand(command) {
     case 'roads':
       speak('Switching to road extraction');
       document.querySelector('.analytics-item[data-section="bigroads"]').click();
+      break;
+    case 'landcover':
+      speak('Switching to land cover segmentation');
+      document.querySelector('.analytics-item[data-section="landcover"]').click();
       break;
     case 'trends':
       speak('Switching to trends analysis');
@@ -142,6 +148,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const analyticsItems = document.querySelectorAll(".analytics-item");
   const analyticsGrid = document.querySelector(".analytics-grid");
   const bigroadsSection = document.getElementById("bigroadsSection");
+  const landcoverSection = document.getElementById("landcoverSection");
+  const analyticsContainer = document.getElementById("analyticsContainer");
   
   // Analytics section switching logic
   analyticsItems.forEach((item) => {
@@ -151,15 +159,25 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const section = this.getAttribute("data-section");
       
-      // Hide all sections first
+      // Hide everything first
       if (analyticsGrid) analyticsGrid.style.display = "none";
       if (bigroadsSection) bigroadsSection.style.display = "none";
+      if (landcoverSection) landcoverSection.style.display = "none";
       
       // Show selected section
       if (section === "bigroads") {
+        if (analyticsContainer) analyticsContainer.style.display = "";
         if (bigroadsSection) bigroadsSection.style.display = "block";
         addLog("Switched to Road Extraction", "info");
+      } else if (section === "landcover") {
+        // Hide entire analytics container (filters etc.) when showing landcover
+        if (analyticsContainer) analyticsContainer.style.display = "none";
+        if (landcoverSection) landcoverSection.style.display = "block";
+        addLog("Switched to Land Cover Segmentation", "info");
+        // Notify the inline landcover script to init/resize map
+        window.dispatchEvent(new Event('landcover-show'));
       } else {
+        if (analyticsContainer) analyticsContainer.style.display = "";
         if (analyticsGrid) analyticsGrid.style.display = "flex";
         addLog(`Switched to ${section} analysis`, "info");
         

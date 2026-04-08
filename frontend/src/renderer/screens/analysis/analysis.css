@@ -7,6 +7,38 @@
   box-sizing: border-box;
 }
 
+/* Protect Leaflet internals from the global reset */
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container,
+.leaflet-pane > svg,
+.leaflet-pane > canvas,
+.leaflet-zoom-box,
+.leaflet-image-layer,
+.leaflet-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.leaflet-container {
+  overflow: hidden;
+}
+
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.leaflet-tile-container img {
+  display: block !important;
+}
+
 /* Animated effects */
 @keyframes starfield {
   0% { transform: translateY(0); }
@@ -654,6 +686,80 @@ body::after {
   border-radius: 12px;
   border: 2px solid #00ff4166;
   box-shadow: 0 0 30px #00ff4133;
+}
+
+/* ── Land Cover Segmentation section ──────────────────────────────── */
+#landcoverSection {
+  padding: 25px;
+  background: linear-gradient(135deg, #001233, #000814);
+  border-radius: 12px;
+  border: 2px solid #00ff4133;
+  box-shadow: 0 0 30px #00ff4122;
+}
+
+.landcover-legend {
+  font-family: "Share Tech Mono", monospace;
+  font-size: 13px;
+}
+
+.lc-legend-item {
+  padding: 4px 10px;
+  background: rgba(0, 255, 65, 0.08);
+  border: 1px solid #00ff4133;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.landcover-controls {
+  background: linear-gradient(135deg, #001a3399, #00081499);
+  backdrop-filter: blur(10px);
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 2px solid #00ff4166;
+  box-shadow: 0 0 20px #00ff4133;
+}
+
+#lcMapContainer {
+  box-shadow: 0 0 30px #00ff4122;
+  overflow: visible;
+  position: relative;
+  border-radius: 10px;
+}
+
+#lcMap {
+  background: #1a2a3a !important;
+}
+
+/* Ensure Leaflet tile images are visible */
+#lcMap .leaflet-tile-container img,
+#lcMap .leaflet-tile {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+#lcMap .leaflet-control-container {
+  z-index: 800;
+}
+
+#lcResults {
+  padding: 20px;
+  background: linear-gradient(135deg, #001a3399, #00081499);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 2px solid #00ff4166;
+  box-shadow: 0 0 30px #00ff4133;
+}
+
+.lc-result-card {
+  border: 1px solid #00ff4133;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.lc-result-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px #00ff4133;
 }
 
 /* Voice command indicator */

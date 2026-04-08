@@ -12,3 +12,4 @@ tqdm
 transformers
 geopy
 feedparser
+onnxruntime

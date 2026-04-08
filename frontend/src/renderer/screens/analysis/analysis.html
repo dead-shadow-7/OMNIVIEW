@@ -44,25 +44,29 @@
           </div>
         </div>
         <div class="analytics-section">
-          <div class="analytics-item active" data-section="analytics">
+          <div class="analytics-item" data-section="analytics" style="display: none;">
             <div class="item-icon">📊</div>
             <span>Area Analysis</span>
           </div>
-          <div class="analytics-item" data-section="trends">
+          <div class="analytics-item" data-section="trends" style="display: none;">
             <div class="item-icon">📈</div>
             <span>Trends</span>
           </div>
-          <div class="analytics-item" data-section="classification">
+          <div class="analytics-item" data-section="classification" style="display: none;">
             <div class="item-icon">🗺️</div>
             <span>Classification</span>
           </div>
-          <div class="analytics-item" data-section="ndvi">
+          <div class="analytics-item" data-section="ndvi" style="display: none;">
             <div class="item-icon">🌿</div>
             <span>NDVI Analysis</span>
           </div>
-          <div class="analytics-item" data-section="bigroads">
+          <div class="analytics-item active" data-section="bigroads">
             <div class="item-icon">🛣️</div>
             <span>Road Extraction</span>
+          </div>
+          <div class="analytics-item" data-section="landcover">
+            <div class="item-icon">🌍</div>
+            <span>Land Cover</span>
           </div>
         </div>
 
@@ -90,7 +94,7 @@
               </label>
             </div>
             <!-- New layout: full-map left, results panel right -->
-            <div class="analytics-grid">
+            <div class="analytics-grid" style="display: none;">
               <div id="analyticsMapArea" class="map-area">
                 <div class="map-toolbar">
                   <button id="drawBtn" class="action-btn small">Draw Area</button>
@@ -113,7 +117,7 @@
             </div>
 
             <!-- Big Roads Extraction: explanatory content + upload form -->
-            <div id="bigroadsSection" class="bigroads-section" style="display:none; padding:20px;">
+            <div id="bigroadsSection" class="bigroads-section" style="display:block; padding:20px;">
               <h2 style="color:#ffb74d; margin:0 0 12px;">🛣️ Extract Big Roads (Sentinel-2)</h2>
               <p style="color:#cfefff; max-width:900px; margin-bottom:12px;">
                 Use this feature to extract major road networks from Sentinel-2 satellite imagery.
@@ -167,6 +171,57 @@
                 </p>
               </div>
             </div>
+
+          </div>
+          <!-- END analyticsContainer -->
+
+          <!-- Land Cover Segmentation Section -->
+          <div id="landcoverSection" style="display:none; padding:20px;">
+            <h2 style="color:#ffb74d; margin:0 0 12px;">🌍 Land Cover Segmentation</h2>
+            <p style="color:#cfefff; max-width:900px; margin-bottom:12px;">
+              Click on the satellite map to select a location. The AI model will fetch a
+              256×256 satellite tile and classify every pixel into one of five land-cover classes.
+            </p>
+            <div style="display:flex; gap:14px; flex-wrap:wrap; margin-bottom:16px; font-family:monospace; font-size:13px;">
+              <span style="color:#4A235A; padding:4px 10px; background:rgba(0,255,65,0.08); border:1px solid #00ff4133; border-radius:6px; font-weight:600;">■ Background</span>
+              <span style="color:#FFB900; padding:4px 10px; background:rgba(0,255,65,0.08); border:1px solid #00ff4133; border-radius:6px; font-weight:600;">■ Buildings</span>
+              <span style="color:#0FFF00; padding:4px 10px; background:rgba(0,255,65,0.08); border:1px solid #00ff4133; border-radius:6px; font-weight:600;">■ Trees / Greens</span>
+              <span style="color:#008BFF; padding:4px 10px; background:rgba(0,255,65,0.08); border:1px solid #00ff4133; border-radius:6px; font-weight:600;">■ Water</span>
+              <span style="color:#FFF600; padding:4px 10px; background:rgba(0,255,65,0.08); border:1px solid #00ff4133; border-radius:6px; font-weight:600;">■ Road</span>
+            </div>
+
+            <div style="display:flex; gap:12px; align-items:center; margin-bottom:14px;">
+              <button id="lcSelectAreaBtn" class="action-btn">Select Area on Map</button>
+              <button id="lcClearBtn" class="action-btn small" type="button">Clear</button>
+              <div id="lcStatus" style="color:#ffd; margin-left:12px;">Click the map to pick a location</div>
+            </div>
+
+            <div id="lcMapContainer" style="width:100%; height:450px; border:2px solid #00ff4188; margin-bottom:18px; position:relative; background:#0a1628; border-radius:10px; overflow:hidden;">
+              <div id="lcMap" style="width:100%; height:100%;"></div>
+            </div>
+
+            <div id="lcResults" style="display:none; margin-top:14px;">
+              <h3 style="color:#ffd27a; margin-bottom:8px;">Results</h3>
+              <div style="display:flex; gap:14px; flex-wrap:wrap;">
+                <div style="flex:1 1 280px; min-width:240px; background:#1a1a1a; padding:10px; border-radius:8px;">
+                  <h4 style="margin:6px 0; color:#bfe8ff;">Original Tile</h4>
+                  <div id="lcOriginal" style="width:100%; height:260px; background:#0f0f0f; display:flex; align-items:center; justify-content:center; border-radius:6px;">
+                    <span style="color:#4b8; opacity:0.6;">No image</span>
+                  </div>
+                </div>
+                <div style="flex:1 1 280px; min-width:240px; background:#1a1a1a; padding:10px; border-radius:8px;">
+                  <h4 style="margin:6px 0; color:#bfe8ff;">Segmentation Mask</h4>
+                  <div id="lcMask" style="width:100%; height:260px; background:#0f0f0f; display:flex; align-items:center; justify-content:center; border-radius:6px;">
+                    <span style="color:#ff8; opacity:0.6;">No mask</span>
+                  </div>
+                </div>
+                <div style="flex:1 1 320px; min-width:260px; background:#1a1a1a; padding:10px; border-radius:8px;">
+                  <h4 style="margin:6px 0; color:#bfe8ff;">Class Distribution</h4>
+                  <div id="lcChartBars" style="padding:8px 0;"></div>
+                  <div id="lcClassList" style="margin-top:8px; font-size:13px; color:#cfe;"></div>
+                </div>
+              </div>
+            </div>
           </div>
 
         </div>
@@ -198,7 +253,151 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <!-- For export -->
+    <script src="../config.js"></script>
+
+    <!-- ═══ LAND COVER MAP — self-contained, runs after Leaflet is loaded ═══ -->
+    <script>
+    (function () {
+      'use strict';
+      console.log('[LandCover] inline script loaded. L defined:', typeof L !== 'undefined');
+
+      var lcMap = null;
+      var lcMapReady = false;
+      var lcMarker = null;
+      var lcSelectMode = true;
+
+      function initMap() {
+        if (lcMapReady) {
+          if (lcMap) lcMap.invalidateSize();
+          return;
+        }
+        var el = document.getElementById('lcMap');
+        if (!el) { console.warn('[LandCover] #lcMap not found'); return; }
+
+        var rect = el.getBoundingClientRect();
+        console.log('[LandCover] lcMap rect:', rect.width, 'x', rect.height);
+        if (rect.width < 10 || rect.height < 10) {
+          console.log('[LandCover] too small, retry in 300ms');
+          setTimeout(initMap, 300);
+          return;
+        }
+
+        try {
+          lcMap = L.map(el).setView([20.5937, 78.9629], 5);
+          L.tileLayer(
+            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+            { attribution: 'Tiles &copy; Esri', maxZoom: 18 }
+          ).addTo(lcMap);
+          lcMapReady = true;
+          el.style.cursor = 'crosshair';
+          console.log('[LandCover] map created OK');
+          setTimeout(function () { lcMap.invalidateSize(); }, 200);
+        } catch (e) {
+          console.error('[LandCover] map error:', e);
+          return;
+        }
+
+        // Click handler — call backend
+        lcMap.on('click', function (e) {
+          if (!lcSelectMode) return;
+          var lat = e.latlng.lat, lng = e.latlng.lng;
+          if (lcMarker) lcMarker.setLatLng(e.latlng);
+          else lcMarker = L.marker(e.latlng).addTo(lcMap);
+          lcMarker.bindPopup('Analysing land cover…').openPopup();
+          var statusEl = document.getElementById('lcStatus');
+          if (statusEl) statusEl.textContent = 'Fetching tile & running model…';
+
+          var zoom = lcMap.getZoom() < 15 ? 17 : lcMap.getZoom();
+          var url = (typeof API_CONFIG !== 'undefined') ? API_CONFIG.getUrl('LANDCOVER') : 'http://127.0.0.1:5000/api/landcover';
+          fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lat: lat, lon: lng, zoom: zoom })
+          })
+          .then(function (r) { if (!r.ok) throw new Error('Server ' + r.status); return r.json(); })
+          .then(function (data) {
+            showResults(data, lat, lng);
+            if (statusEl) statusEl.textContent = 'Done — click map again for a new location';
+            lcMarker.bindPopup('<b>Land Cover</b><br>' + lat.toFixed(4) + '°N, ' + lng.toFixed(4) + '°E<br>Done').openPopup();
+          })
+          .catch(function (err) {
+            if (statusEl) statusEl.textContent = 'Error: ' + err.message;
+            lcMarker.bindPopup('Error: ' + err.message).openPopup();
+            console.error('[LandCover]', err);
+          });
+        });
+      }
+
+      function showResults(data, lat, lng) {
+        console.log('[LandCover] showResults called, classes:', data.classes ? data.classes.length : 'none');
+        var r = document.getElementById('lcResults');
+        if (r) r.style.display = '';
+        var orig = document.getElementById('lcOriginal');
+        if (orig) orig.innerHTML = '<img src="' + data.original + '" style="width:100%;height:100%;object-fit:contain;border-radius:6px;" />';
+        var mask = document.getElementById('lcMask');
+        if (mask) mask.innerHTML = '<img src="' + data.mask + '" style="width:100%;height:100%;object-fit:contain;border-radius:6px;" />';
+
+        // Pure HTML bar chart — no Chart.js dependency
+        var bars = document.getElementById('lcChartBars');
+        var list = document.getElementById('lcClassList');
+        var barColors = ['#4A235A','#FFB900','#0FFF00','#008BFF','#FFF600'];
+        if (data.classes && data.classes.length) {
+          var maxPct = Math.max.apply(null, data.classes.map(function(c){ return c.percentage; }));
+          if (maxPct <= 0) maxPct = 1;
+          var titleHtml = '<div style="color:#cfe;font-size:12px;margin-bottom:10px;text-align:center;">Land Cover \u2014 ' + lat.toFixed(3) + '\u00b0N, ' + lng.toFixed(3) + '\u00b0E</div>';
+          var barsHtml = data.classes.map(function(c, i) {
+            var widthPct = Math.max((c.percentage / maxPct) * 100, 2);
+            return '<div style="display:flex;align-items:center;margin-bottom:6px;">'
+              + '<span style="width:90px;font-size:11px;color:' + barColors[i] + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + c.name + '</span>'
+              + '<div style="flex:1;height:20px;background:#0a0a0a;border-radius:4px;margin:0 8px;overflow:hidden;">'
+              + '<div style="width:' + widthPct + '%;height:100%;background:' + barColors[i] + ';border-radius:4px;transition:width 0.4s;"></div>'
+              + '</div>'
+              + '<span style="min-width:52px;text-align:right;font-size:12px;color:#eee;">' + c.percentage + '%</span>'
+              + '</div>';
+          }).join('');
+          if (bars) bars.innerHTML = titleHtml + barsHtml;
+
+          // Text class list below the bars
+          if (list) {
+            list.innerHTML = data.classes.map(function (c, i) {
+              return '<div style="display:flex;justify-content:space-between;padding:3px 0;"><span style="color:' + barColors[i] + ';">\u25a0 ' + c.name + '</span><span>' + c.count.toLocaleString() + ' px (' + c.percentage + '%)</span></div>';
+            }).join('');
+          }
+        } else {
+          if (bars) bars.innerHTML = '<div style="color:#f88;padding:12px;">No class data returned</div>';
+          if (list) list.innerHTML = '';
+        }
+      }
+
+      // Buttons
+      document.addEventListener('DOMContentLoaded', function () {
+        var sel = document.getElementById('lcSelectAreaBtn');
+        if (sel) sel.addEventListener('click', function () {
+          lcSelectMode = true;
+          if (lcMap) lcMap.getContainer().style.cursor = 'crosshair';
+          var s = document.getElementById('lcStatus');
+          if (s) s.textContent = 'Click on the map to select a location';
+        });
+        var clr = document.getElementById('lcClearBtn');
+        if (clr) clr.addEventListener('click', function () {
+          if (lcMarker && lcMap) { lcMap.removeLayer(lcMarker); lcMarker = null; }
+          var r = document.getElementById('lcResults'); if (r) r.style.display = 'none';
+          var o = document.getElementById('lcOriginal'); if (o) o.innerHTML = '<span style="color:#4b8;opacity:0.6;">No image</span>';
+          var m = document.getElementById('lcMask'); if (m) m.innerHTML = '<span style="color:#ff8;opacity:0.6;">No mask</span>';
+          var l = document.getElementById('lcClassList'); if (l) l.innerHTML = '';
+          var b = document.getElementById('lcChartBars'); if (b) b.innerHTML = '';
+          var s = document.getElementById('lcStatus'); if (s) s.textContent = 'Click the map to pick a location';
+        });
+      });
+
+      // Listen for the tab switch event from analysis.js
+      window.addEventListener('landcover-show', function () {
+        console.log('[LandCover] landcover-show event received');
+        setTimeout(initMap, 150);
+      });
+    })();
+    </script>
+
     <script src="analysis.js"></script>
   </body>
 </html>

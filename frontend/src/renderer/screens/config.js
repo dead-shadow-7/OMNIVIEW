@@ -11,6 +11,7 @@ const API_CONFIG = {
     GENERATE_REPORT: "/api/generate_report",
     DISASTER_CSV: "/api/disaster-csv",
     ANALYZE_DISASTERS: "/api/analyze-disasters",
+    LANDCOVER: "/api/landcover",
   },
 
   // Helper method to get full URL
