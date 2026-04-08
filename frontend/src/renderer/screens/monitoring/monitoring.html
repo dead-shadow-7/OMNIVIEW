@@ -374,9 +374,14 @@
           }
           map.getContainer().style.cursor = "";
 
-          // Get reference to MarineTraffic iframe
+          // Get reference to overlays
           const marineTrafficFrame = document.getElementById('marineTrafficFrame');
+          const shipView = document.getElementById('shipView');
           const mapDiv = document.getElementById('map');
+
+          // Hide overlays when switching sections
+          if (shipView) shipView.style.display = 'none';
+          document.getElementById('buildingPanel').style.display = 'none';
           
           // Handle specific feature activation
           switch (index) {
@@ -846,8 +851,8 @@
         }
       });
 
-      // Add text-to-speech toggle and clear logs buttons to the panel header
-      const panelHeader = document.querySelector(".panel-header");
+      // Add text-to-speech toggle and clear logs buttons to the logs panel header
+      const panelHeader = document.querySelector(".bottom-panel .panel-header");
 
       // Text-to-speech toggle button
       const ttsBtn = document.createElement("button");
