@@ -236,13 +236,74 @@ function displayResults(e) {
     resultsContainer.innerHTML = `<div class="error">${msg}</div>`;
     return;
   }
-  const t = e.articles
-    .map(
-      (e) =>
-        `\n          <div class="news-article">\n            <h3>${escapeHtml(e.title || "Untitled")}</h3>\n            <p>${escapeHtml(e.snippet || "No description available.")}</p>\n            <a href="${escapeHtml(e.link || "#")}" target="_blank" rel="noopener noreferrer">Read more →</a>\n          </div>\n        `
-    )
-    .join("");
-  resultsContainer.innerHTML = t;
+  resultsContainer.innerHTML = e.articles.map(renderArticleCard).join("");
+}
+
+const SOURCE_PALETTE = [
+  ["#3b82f6", "#1d4ed8"],
+  ["#a855f7", "#7e22ce"],
+  ["#10b981", "#047857"],
+  ["#f59e0b", "#b45309"],
+  ["#ef4444", "#b91c1c"],
+  ["#06b6d4", "#0e7490"],
+  ["#ec4899", "#be185d"],
+  ["#14b8a6", "#0f766e"],
+  ["#8b5cf6", "#6d28d9"],
+  ["#f97316", "#c2410c"],
+];
+
+function sourceInitials(name) {
+  if (!name) return "?";
+  const cleaned = name.replace(/^https?:\/\//, "").replace(/^www\./, "");
+  const tokens = cleaned.split(/[\s.\-_/]+/).filter(Boolean);
+  if (tokens.length === 1) return tokens[0].slice(0, 2).toUpperCase();
+  return (tokens[0][0] + tokens[1][0]).toUpperCase();
+}
+
+function sourcePalette(name) {
+  const key = name || "?";
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  return SOURCE_PALETTE[hash % SOURCE_PALETTE.length];
+}
+
+function freshnessTier(isoDate) {
+  if (!isoDate) return { tier: "old", label: "Older" };
+  const d = new Date(isoDate);
+  if (isNaN(d.getTime())) return { tier: "old", label: "Older" };
+  const days = (Date.now() - d.getTime()) / (1000 * 60 * 60 * 24);
+  if (days <= 1.5) return { tier: "today", label: "Today" };
+  if (days <= 7.5) return { tier: "week", label: "This week" };
+  if (days <= 31) return { tier: "month", label: "This month" };
+  return { tier: "old", label: "Older" };
+}
+
+function renderArticleCard(article) {
+  const title = escapeHtml(article.title || "Untitled");
+  const source = (article.source || "News Source").trim();
+  const snippet = escapeHtml(article.snippet || "");
+  const link = escapeHtml(article.link || "#");
+  const initials = escapeHtml(sourceInitials(source));
+  const [c1, c2] = sourcePalette(source);
+  const fresh = freshnessTier(article.date);
+
+  return `
+    <article class="news-article">
+      <div class="news-card-row">
+        <div class="source-badge" style="background: linear-gradient(135deg, ${c1}, ${c2});" aria-hidden="true">${initials}</div>
+        <div class="news-card-body">
+          <h3>${title}</h3>
+          <div class="news-card-meta">
+            <span class="freshness-dot freshness-${fresh.tier}" title="${fresh.label}"></span>
+            <span class="news-card-snippet">${snippet}</span>
+          </div>
+          <a class="read-more-pill" href="${link}" target="_blank" rel="noopener noreferrer">
+            Read article
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+        </div>
+      </div>
+    </article>`;
 }
 function escapeHtml(e) {
   const t = {
