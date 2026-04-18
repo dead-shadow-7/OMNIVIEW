@@ -10,7 +10,7 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 import io
 from io import BytesIO
-from datetime import datetime
+from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg')  # Use non-GUI backend
@@ -132,14 +132,21 @@ class DisasterResponseAgent:
             return query
         return f"{query} {self.DISASTER_AUGMENT}"
 
-    def get_google_news(self, query, num_results=15):
-        """Fetch news via Google News RSS (primary), falling back to NewsAPI."""
+    WHEN_TO_DAYS = {'1d': 1, '7d': 7, '30d': 30}
+
+    def get_google_news(self, query, num_results=15, when=None):
+        """Fetch news via Google News RSS (primary), falling back to NewsAPI.
+
+        when: one of '1d', '7d', '30d', or None for all-time.
+        """
         scoped_query = self._disaster_query(query)
+        when_suffix = f" when:{when}" if when in self.WHEN_TO_DAYS else ""
+        rss_query = scoped_query + when_suffix
         try:
-            app.logger.info(f"Searching Google News RSS for: {scoped_query}")
+            app.logger.info(f"Searching Google News RSS for: {rss_query}")
             rss_url = (
                 "https://news.google.com/rss/search"
-                f"?q={quote(scoped_query)}&hl=en-IN&gl=IN&ceid=IN:en"
+                f"?q={quote(rss_query)}&hl=en-IN&gl=IN&ceid=IN:en"
             )
             feed = feedparser.parse(rss_url)
 
@@ -180,14 +187,18 @@ class DisasterResponseAgent:
         if NEWS_API_KEY:
             try:
                 app.logger.info(f"Searching NewsAPI for: {query}")
+                params = {
+                    'q': query,
+                    'sortBy': 'relevancy',
+                    'pageSize': min(num_results, 100),
+                    'apiKey': NEWS_API_KEY,
+                }
+                if when in self.WHEN_TO_DAYS:
+                    from_date = (datetime.now() - timedelta(days=self.WHEN_TO_DAYS[when])).strftime('%Y-%m-%d')
+                    params['from'] = from_date
                 response = requests.get(
                     "https://newsapi.org/v2/everything",
-                    params={
-                        'q': query,
-                        'sortBy': 'relevancy',
-                        'pageSize': min(num_results, 100),
-                        'apiKey': NEWS_API_KEY,
-                    },
+                    params=params,
                     timeout=15,
                 )
 
@@ -975,18 +986,20 @@ def get_news():
     try:
         data = request.json
         query = data.get("query", "")
-        
+        when = data.get("when")  # one of '1d', '7d', '30d', or None
+
         if not query:
             return jsonify({"error": "No search query provided"}), 400
-        
-        app.logger.info(f"📰 Fetching news for: {query}")
-        
-        articles = disaster_agent.get_google_news(query, num_results=15)
-        
+
+        app.logger.info(f"📰 Fetching news for: {query} (when={when or 'all'})")
+
+        articles = disaster_agent.get_google_news(query, num_results=15, when=when)
+
         return jsonify({
             "articles": articles,
             "total": len(articles),
             "query": query,
+            "when": when,
             "timestamp": datetime.now().isoformat(),
             "status": "success"
         })

@@ -120,7 +120,15 @@
 
   <!-- News Results -->
   <div class="news-results" id="newsResults">
-    <div class="section-title" id="sectionTitle">Latest News</div>
+    <div class="news-results-header">
+      <div class="section-title" id="sectionTitle">Latest News</div>
+      <div class="time-filter" id="timeFilter" role="tablist" aria-label="Filter by time">
+        <button class="time-option" data-when="1d" role="tab">24h</button>
+        <button class="time-option" data-when="7d" role="tab">7d</button>
+        <button class="time-option" data-when="30d" role="tab">30d</button>
+        <button class="time-option active" data-when="all" role="tab" aria-selected="true">All</button>
+      </div>
+    </div>
     <div class="disaster-brief-card" id="disasterBriefCard" style="display: none;"></div>
     <div id="resultsContainer"></div>
   </div>
