@@ -606,7 +606,7 @@ class DisasterResponseAgent:
                     "https://api.groq.com/openai/v1/chat/completions",
                     headers=self.groq_headers,
                     json={
-                        "model": "llama-3.1-70b-versatile",
+                        "model": "llama-3.3-70b-versatile",
                         "messages": [{"role": "user", "content": prompt}],
                         "max_tokens": 2000,
                         "temperature": 0.7
@@ -1043,16 +1043,16 @@ def _generate_news_brief(query, articles):
         f"Headlines:\n{headlines}"
     )
 
-    if OPENROUTER_API_KEY:
+    if GROQ_API_KEY:
         try:
             response = requests.post(
-                "https://openrouter.ai/api/v1/chat/completions",
+                "https://api.groq.com/openai/v1/chat/completions",
                 headers={
-                    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                    "Authorization": f"Bearer {GROQ_API_KEY}",
                     "Content-Type": "application/json",
                 },
                 json={
-                    "model": "openrouter/elephant-alpha",
+                    "model": "llama-3.3-70b-versatile",
                     "messages": [{"role": "user", "content": prompt}],
                     "max_tokens": 700,
                     "temperature": 0.3,
@@ -1060,12 +1060,12 @@ def _generate_news_brief(query, articles):
                 timeout=20,
             )
             if response.status_code == 200:
-                content = response.json().get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+                content = (response.json().get("choices", [{}])[0].get("message", {}).get("content") or "").strip()
                 if content:
                     return content
-            app.logger.warning(f"OpenRouter brief returned {response.status_code}, falling back to Gemini")
+            app.logger.warning(f"Groq brief returned {response.status_code}, falling back to Gemini")
         except Exception as e:
-            app.logger.error(f"OpenRouter brief error: {e}")
+            app.logger.error(f"Groq brief error: {e}")
 
     if GEMINI_API_KEY:
         try:
