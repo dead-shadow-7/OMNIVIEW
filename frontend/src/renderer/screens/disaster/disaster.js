@@ -221,8 +221,22 @@ function showReportSection() {
   document.querySelector(".content-area").style.display = "block";
 }
 function showLoading() {
-  resultsContainer.innerHTML =
-    '<div class="loading">Loading news articles...</div>';
+  const skeletonCount = 6;
+  let html = "";
+  for (let i = 0; i < skeletonCount; i++) {
+    html += `
+      <div class="news-article news-skeleton" style="--stagger:${i};">
+        <div class="news-card-row">
+          <div class="skeleton-badge"></div>
+          <div class="news-card-body">
+            <div class="skeleton-line skeleton-line-title"></div>
+            <div class="skeleton-line skeleton-line-meta"></div>
+            <div class="skeleton-line skeleton-line-pill"></div>
+          </div>
+        </div>
+      </div>`;
+  }
+  resultsContainer.innerHTML = html;
 }
 function showError(e) {
   resultsContainer.innerHTML = `<div class="error">${e}</div>`;
@@ -236,7 +250,9 @@ function displayResults(e) {
     resultsContainer.innerHTML = `<div class="error">${msg}</div>`;
     return;
   }
-  resultsContainer.innerHTML = e.articles.map(renderArticleCard).join("");
+  resultsContainer.innerHTML = e.articles
+    .map((article, idx) => renderArticleCard(article, idx))
+    .join("");
 }
 
 const SOURCE_PALETTE = [
@@ -278,7 +294,7 @@ function freshnessTier(isoDate) {
   return { tier: "old", label: "Older" };
 }
 
-function renderArticleCard(article) {
+function renderArticleCard(article, idx = 0) {
   const title = escapeHtml(article.title || "Untitled");
   const source = (article.source || "News Source").trim();
   const snippet = escapeHtml(article.snippet || "");
@@ -286,9 +302,10 @@ function renderArticleCard(article) {
   const initials = escapeHtml(sourceInitials(source));
   const [c1, c2] = sourcePalette(source);
   const fresh = freshnessTier(article.date);
+  const stagger = Math.min(idx, 12);
 
   return `
-    <article class="news-article">
+    <article class="news-article news-article-enter" style="--stagger:${stagger};">
       <div class="news-card-row">
         <div class="source-badge" style="background: linear-gradient(135deg, ${c1}, ${c2});" aria-hidden="true">${initials}</div>
         <div class="news-card-body">
