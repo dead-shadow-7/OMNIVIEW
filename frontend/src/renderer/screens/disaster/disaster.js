@@ -515,7 +515,11 @@ menuItems.forEach((e) => {
     } else if (currentSection === "pre-disaster") {
       showPreDisaster();
     } else if (currentSection === "news") {
-      isSearching || loadDefaultContent();
+      if (isSearching) {
+        showNewsResults();
+      } else {
+        loadDefaultContent();
+      }
     } else {
       isSearching || loadDefaultContent();
     }
