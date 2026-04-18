@@ -22,6 +22,8 @@ import re
 import time
 from urllib.parse import quote
 import random
+import feedparser
+import html as html_lib
 
 from road_backend import road_bp
 from services.flight_data import start_flight_tracker, get_flights_data
@@ -42,6 +44,7 @@ GOOGLE_CX = os.getenv("GOOGLE_CX")
 HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+NEWS_API_KEY = os.getenv("NEWS_API_KEY")
 
 # Validate required API keys
 if not GEMINI_API_KEY or not GOOGLE_API_KEY or not GOOGLE_CX:
@@ -112,46 +115,104 @@ class DisasterResponseAgent:
             app.logger.error(f"Failed to create local placeholder: {e}")
             return None
 
-    def get_google_news(self, query, num_results=10):
-        """Fetch news using Google Custom Search API with enhanced fallbacks"""
+    DISASTER_KEYWORDS = {
+        'flood', 'floods', 'flooding', 'earthquake', 'quake', 'cyclone', 'hurricane',
+        'typhoon', 'tsunami', 'wildfire', 'fire', 'fires', 'landslide', 'landslides',
+        'avalanche', 'drought', 'heatwave', 'heat wave', 'storm', 'tornado', 'blizzard',
+        'volcano', 'eruption', 'disaster', 'emergency', 'rescue', 'evacuation',
+        'cloudburst', 'glacier', 'sinkhole', 'collapse', 'blast', 'tragedy', 'accident',
+        'crash', 'outbreak', 'epidemic', 'pandemic', 'spill', 'leak',
+    }
+    DISASTER_AUGMENT = "(disaster OR emergency OR heatwave OR flood OR fire OR storm OR landslide)"
+
+    def _disaster_query(self, query):
+        ql = query.lower()
+        if any(re.search(rf'\b{re.escape(kw)}\b', ql) for kw in self.DISASTER_KEYWORDS):
+            return query
+        return f"{query} {self.DISASTER_AUGMENT}"
+
+    def get_google_news(self, query, num_results=15):
+        """Fetch news via Google News RSS (primary), falling back to NewsAPI."""
+        scoped_query = self._disaster_query(query)
         try:
-            enhanced_query = f"{query} disaster emergency news recent"
-            url = "https://www.googleapis.com/customsearch/v1"
-            params = {
-                'key': GOOGLE_API_KEY,
-                'cx': GOOGLE_CX,
-                'q': enhanced_query,
-                'num': min(num_results, 10),
-                'dateRestrict': 'd30',  # Last 30 days
-                'sort': 'date'
-            }
-            
-            app.logger.info(f"Searching Google News for: {enhanced_query}")
-            response = requests.get(url, params=params, timeout=15)
-            
-            if response.status_code == 200:
-                data = response.json()
-                articles = []
-                
-                for item in data.get('items', []):
-                    articles.append({
-                        'title': item.get('title', 'Breaking News Update'),
-                        'snippet': item.get('snippet', 'Emergency situation developing...'),
-                        'link': item.get('link', '#'),
-                        'source': item.get('displayLink', 'News Source'),
-                        'date': datetime.now().strftime('%Y-%m-%d')
-                    })
-                
-                app.logger.info(f"Found {len(articles)} news articles")
-                return articles if articles else self.get_fallback_news(query)
-                
-            else:
-                app.logger.warning(f"Google News API returned {response.status_code}")
-                return self.get_fallback_news(query)
-                
+            app.logger.info(f"Searching Google News RSS for: {scoped_query}")
+            rss_url = (
+                "https://news.google.com/rss/search"
+                f"?q={quote(scoped_query)}&hl=en-IN&gl=IN&ceid=IN:en"
+            )
+            feed = feedparser.parse(rss_url)
+
+            articles = []
+            for entry in feed.entries[:num_results]:
+                raw_title = entry.get('title', '') or ''
+                if ' - ' in raw_title:
+                    title, _, source = raw_title.rpartition(' - ')
+                else:
+                    title, source = raw_title, entry.get('source', {}).get('title', 'News Source')
+
+                title = html_lib.unescape(title) or 'Breaking News Update'
+                source = (source or 'News Source').strip()
+
+                published_struct = entry.get('published_parsed')
+                if published_struct:
+                    iso_date = time.strftime('%Y-%m-%d', published_struct)
+                    pretty_date = time.strftime('%b %d, %Y', published_struct)
+                else:
+                    iso_date = datetime.now().strftime('%Y-%m-%d')
+                    pretty_date = datetime.now().strftime('%b %d, %Y')
+
+                articles.append({
+                    'title': title,
+                    'snippet': f"{source} • {pretty_date}",
+                    'link': entry.get('link', '#'),
+                    'source': source,
+                    'date': iso_date,
+                })
+
+            if articles:
+                app.logger.info(f"Google News RSS returned {len(articles)} articles")
+                return articles
+            app.logger.warning("Google News RSS returned 0 articles, trying NewsAPI")
         except Exception as e:
-            app.logger.error(f"Google News error: {e}")
-            return self.get_fallback_news(query)
+            app.logger.error(f"Google News RSS error: {e}")
+
+        if NEWS_API_KEY:
+            try:
+                app.logger.info(f"Searching NewsAPI for: {query}")
+                response = requests.get(
+                    "https://newsapi.org/v2/everything",
+                    params={
+                        'q': query,
+                        'sortBy': 'relevancy',
+                        'pageSize': min(num_results, 100),
+                        'apiKey': NEWS_API_KEY,
+                    },
+                    timeout=15,
+                )
+
+                if response.status_code == 200:
+                    data = response.json()
+                    articles = []
+                    for item in data.get('articles', []):
+                        published = item.get('publishedAt', '') or ''
+                        articles.append({
+                            'title': item.get('title') or 'Breaking News Update',
+                            'snippet': item.get('description') or 'Emergency situation developing...',
+                            'link': item.get('url') or '#',
+                            'source': (item.get('source') or {}).get('name') or 'News Source',
+                            'date': published[:10] if published else datetime.now().strftime('%Y-%m-%d'),
+                        })
+
+                    if articles:
+                        app.logger.info(f"NewsAPI returned {len(articles)} articles")
+                        return articles
+                    app.logger.warning("NewsAPI returned 0 articles")
+                else:
+                    app.logger.warning(f"NewsAPI returned {response.status_code}")
+            except Exception as e:
+                app.logger.error(f"NewsAPI error: {e}")
+
+        return self.get_fallback_news(query)
 
     def get_fallback_news(self, query):
         """Generate realistic fallback news when API fails"""
@@ -919,7 +980,7 @@ def get_news():
         
         app.logger.info(f"📰 Fetching news for: {query}")
         
-        articles = disaster_agent.get_google_news(query, num_results=12)
+        articles = disaster_agent.get_google_news(query, num_results=15)
         
         return jsonify({
             "articles": articles,
