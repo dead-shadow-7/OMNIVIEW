@@ -73,12 +73,8 @@ cd backend
 # Install all Python dependencies
 pip install -r requirements.txt
 
-# For road extraction, also install:
-pip install tensorflow opencv-python
-
-# Download the Road Extraction Model
-# [Download model link here]
-# Place the model file (e.g. `road_detection_resnet_e50.h5`) in a known location and update `MODEL_PATH` in `backend/road_extract.py` if needed.
+# Download pre-trained model weights (~275 MB)
+python setup_models.py
 
 # Run backend server
 python app.py
@@ -131,18 +127,26 @@ docker run -p 5000:5000 omniview-backend
 
 ---
 
-## 🧠 Model Setup for Road Extraction
+## 🧠 Model Weights
 
-1. Download the pre-trained road extraction model (link to be provided):
-   - [Download model link here]
-2. Place the model file (e.g. `road_detection_resnet_e50.h5`) in a known location.
-3. Update the `MODEL_PATH` variable in `backend/road_extract.py` if your path is different.
-4. Ensure you have installed TensorFlow and OpenCV as shown above.
+Pre-trained weights are hosted as a GitHub Release and downloaded automatically by `backend/setup_models.py`.
+
+```bash
+cd backend
+python setup_models.py              # download what's missing
+python setup_models.py --force      # re-download everything
+python setup_models.py --verify     # check existing files only
+```
+
+| File | Size | Used by |
+|------|------|---------|
+| `unet_builtup_cd.pth` | 119 MB | Building change detection (`change_detection.py`) |
+| `road_detection_resnet_e50.h5` | 63 MB | Road extraction (`road_extract.py`) |
+| `unet_poland_ds_modelv1.onnx` | 93 MB | Landcover classification (`landcover.py`) |
+
+All three are downloaded into `backend/ml_models/` — model paths in the code resolve relative to this folder, so no manual edits are required.
+
+Release: [v1.0-models-alpha](https://github.com/Vinit710/OMNIVIEW/releases/tag/v1.0-models-alpha)
 
 ---
-
----
-
-
-replace model path in landcover.py
 
