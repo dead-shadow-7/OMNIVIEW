@@ -225,34 +225,38 @@
 
 <!-- Post Disaster Section (MAP here) -->
 <div class="post-disaster-section" id="postDisasterSection" style="display: none;">
-  <!-- Filters + Generate Button -->
-  <div class="section-title">
-    <div>
-      <select id="countryFilter">
-        <option value="">All Countries</option>
-      </select>
-      <select id="yearFilter">
-        <option value="">All Years</option>
-      </select>
+  <!-- Filter Toolbar -->
+  <div class="post-toolbar">
+    <div class="post-toolbar-filters">
+      <div class="select-wrap">
+        <span class="select-label">Country</span>
+        <select id="countryFilter" class="post-select">
+          <option value="">All Countries</option>
+        </select>
+      </div>
+      <div class="select-wrap">
+        <span class="select-label">Year</span>
+        <select id="yearFilter" class="post-select">
+          <option value="">All Years</option>
+        </select>
+      </div>
     </div>
-    <button id="generateAnalysisBtn" class="analysis-btn">
-      Generate Analysis
+    <button id="generateAnalysisBtn" class="ai-action-btn" type="button">
+      <span class="ai-action-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18 9.4l-4.2 1.8L12 16l-1.8-4.8L6 9.4l4.2-1.8L12 3z"/><path d="M19 14l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9.9-2.1z"/></svg>
+      </span>
+      <span class="ai-action-label">Generate Analysis</span>
     </button>
   </div>
 
+  <!-- Stats Strip -->
+  <div class="post-stats" id="postStats"></div>
+
+  <!-- Type Filter Chips -->
+  <div class="post-type-chips" id="postTypeChips"></div>
+
   <!-- Map -->
   <div id="map" style="position: relative;"></div>
-
-  <!-- Legend -->
-  <div class="disaster-legend">
-    <div>🌊 Flood</div>
-    <div>🌋 Earthquake</div>
-    <div>🌀 Cyclone</div>
-    <div>☀️ Drought</div>
-    <div>⛰️ Landslide</div>
-    <div>🔥 Wildfire</div>
-    <div>⚠️ Other</div>
-  </div>
 
   <!-- Analysis Result -->
   <div class="analysis-section">

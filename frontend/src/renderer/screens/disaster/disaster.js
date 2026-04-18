@@ -395,80 +395,194 @@ function showPostDisasterReport() {
   // Ensure content area is visible
   document.querySelector(".content-area").style.display = "block";
 }
+let activeDisasterType = "all";
+
+const DISASTER_TYPE_META = {
+  flood: { label: "Floods", icon: "💧", color: "#06b6d4" },
+  earthquake: { label: "Earthquakes", icon: "💥", color: "#f59e0b" },
+  cyclone: { label: "Cyclones", icon: "🌀", color: "#a855f7" },
+  drought: { label: "Drought", icon: "🏜️", color: "#eab308" },
+  landslide: { label: "Landslides", icon: "⛰️", color: "#84cc16" },
+  tsunami: { label: "Tsunami", icon: "🌊", color: "#0ea5e9" },
+  wildfire: { label: "Wildfires", icon: "🔥", color: "#ef4444" },
+  default: { label: "Other", icon: "⚠️", color: "#94a3b8" },
+};
+
+function normalizeDisasterType(type) {
+  const key = (type || "").toLowerCase();
+  return DISASTER_TYPE_META[key] ? key : "default";
+}
+
+let mapHasFitted = false;
+
 function initMap() {
-  (((map = L.map("map").setView([20, 0], 2)),
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    zoom: 5,
+  map = L.map("map", {
+    zoomControl: true,
+    attributionControl: false,
+    preferCanvas: true,
+  }).setView([20, 0], 2);
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png", {
     minZoom: 3,
-    maxZoom: 18,
+    maxZoom: 19,
     maxBounds: [
       [-90, -180],
       [90, 180],
     ],
     maxBoundsViscosity: 1.0,
-    attribution: "&copy; OpenStreetMap contributors",
+    attribution: '&copy; OpenStreetMap &copy; CARTO',
+    subdomains: "abcd",
     noWrap: true,
-  }).addTo(map),
-  (markersLayer = L.layerGroup().addTo(map)),
+  }).addTo(map);
+  L.control.attribution({ position: "bottomright", prefix: false }).addTo(map);
+  markersLayer = L.layerGroup().addTo(map);
+
   fetch(API_CONFIG.getUrl("DISASTER_CSV"))
     .then((e) => e.json())
     .then((e) => {
-      ((disasterPoints = e),
-        populateCountryFilter(e),
-        populateYearFilter(e),
-        (document.getElementById("countryFilter").value = "India"),
-        (document.getElementById("yearFilter").value = "2010"),
-        filterAndRenderMarkers());
+      disasterPoints = e;
+      populateCountryFilter(e);
+      populateYearFilter(e);
+      document.getElementById("countryFilter").value = "India";
+      document.getElementById("yearFilter").value = "2010";
+      renderTypeChips();
+      filterAndRenderMarkers();
     })
     .catch((e) => {
-      (addLog("error", "Failed to load disaster points: " + e.message),
-        console.error("CSV load error:", e));
-    }),
-  document
-    .getElementById("countryFilter")
-    .addEventListener("change", filterAndRenderMarkers),
-  document
-    .getElementById("yearFilter")
-    .addEventListener("change", filterAndRenderMarkers)),
-    map.setMaxBounds([
-      [-90, -180],
-      [90, 180],
-    ]));
+      addLog("error", "Failed to load disaster points: " + e.message);
+      console.error("CSV load error:", e);
+    });
+
+  document.getElementById("countryFilter").addEventListener("change", () => {
+    mapHasFitted = false;
+    filterAndRenderMarkers();
+  });
+  document.getElementById("yearFilter").addEventListener("change", filterAndRenderMarkers);
+
+  map.setMaxBounds([
+    [-90, -180],
+    [90, 180],
+  ]);
 }
+
+
+function getFilteredPoints({ ignoreType = false } = {}) {
+  const country = document.getElementById("countryFilter").value;
+  const year = document.getElementById("yearFilter").value;
+  let points = disasterPoints;
+  if (country) {
+    points = points.filter((p) => p.country && p.country.toLowerCase() === country.toLowerCase());
+  }
+  if (year) {
+    points = points.filter((p) => String(p.year) === year);
+  }
+  if (!ignoreType && activeDisasterType !== "all") {
+    points = points.filter((p) => normalizeDisasterType(p.disastertype) === activeDisasterType);
+  }
+  return points;
+}
+
 function filterAndRenderMarkers() {
-  const e = document.getElementById("countryFilter").value,
-    t = document.getElementById("yearFilter").value;
-  let n = disasterPoints;
-  (e &&
-    (n = n.filter(
-      (t) => t.country && t.country.toLowerCase() === e.toLowerCase()
-    )),
-    t && (n = n.filter((e) => String(e.year) === t)),
-    renderDisasterMarkers(n));
+  const filtered = getFilteredPoints();
+  renderDisasterMarkers(filtered);
+  renderStatsStrip();
+  renderTypeChips();
+}
+
+function renderStatsStrip() {
+  const strip = document.getElementById("postStats");
+  if (!strip) return;
+  const points = getFilteredPoints({ ignoreType: true });
+  const total = points.length;
+  const years = points.map((p) => parseInt(p.year, 10)).filter((y) => !isNaN(y));
+  const yearLabel = years.length
+    ? years.length === 1 || Math.min(...years) === Math.max(...years)
+      ? `${Math.min(...years)}`
+      : `${Math.min(...years)}–${Math.max(...years)}`
+    : "—";
+  strip.innerHTML = `
+    <div class="post-stat-tile post-stat-tile-primary">
+      <div>
+        <div class="post-stat-num">${total.toLocaleString()}</div>
+        <div class="post-stat-label">Events · ${yearLabel}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderTypeChips() {
+  const wrap = document.getElementById("postTypeChips");
+  if (!wrap) return;
+  const baseline = getFilteredPoints({ ignoreType: true });
+  const counts = {};
+  baseline.forEach((p) => {
+    const k = normalizeDisasterType(p.disastertype);
+    counts[k] = (counts[k] || 0) + 1;
+  });
+  const orderedKeys = ["flood", "earthquake", "cyclone", "wildfire", "landslide", "drought", "tsunami", "default"];
+
+  const allChip = `
+    <button class="post-chip ${activeDisasterType === "all" ? "active" : ""}" data-type="all">
+      All <span class="post-chip-count">${baseline.length}</span>
+    </button>`;
+
+  const typeChips = orderedKeys
+    .map((k) => {
+      const meta = DISASTER_TYPE_META[k];
+      const count = counts[k] || 0;
+      const isActive = activeDisasterType === k;
+      const isEmpty = count === 0;
+      const classes = [
+        "post-chip",
+        isActive ? "active" : "",
+        isEmpty ? "is-empty" : "",
+      ].filter(Boolean).join(" ");
+      return `
+        <button class="${classes}" data-type="${k}" ${isEmpty ? "disabled" : ""} style="${isActive ? `--chip-accent:${meta.color}` : ""}">
+          <span class="post-chip-emoji">${meta.icon}</span>
+          ${meta.label}
+          <span class="post-chip-count">${count}</span>
+        </button>`;
+    })
+    .join("");
+
+  wrap.innerHTML = allChip + typeChips;
+
+  wrap.querySelectorAll(".post-chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      if (chip.disabled) return;
+      const t = chip.dataset.type;
+      activeDisasterType = activeDisasterType === t ? "all" : t;
+      filterAndRenderMarkers();
+    });
+  });
 }
 function renderDisasterMarkers(points) {
   markersLayer.clearLayers();
+  const markers = [];
   const latlngs = [];
 
   points.forEach((pt) => {
     if (pt.latitude && pt.longitude) {
       latlngs.push([pt.latitude, pt.longitude]);
-
       const marker = L.marker([pt.latitude, pt.longitude], {
         icon: createDisasterIcon(pt.disastertype),
         title: pt.location,
-      })
-        .addTo(markersLayer)
-        .bindPopup(
-          `<b>${pt.disastertype || "Disaster"}</b><br>
-         <b>Year:</b> ${pt.year || "N/A"}<br>
-         <b>Location:</b> ${pt.location || "N/A"}<br>
-         <b>Country:</b> ${pt.country || "N/A"}`
-        );
+      }).bindPopup(
+        `<b>${pt.disastertype || "Disaster"}</b><br>
+       <b>Year:</b> ${pt.year || "N/A"}<br>
+       <b>Location:</b> ${pt.location || "N/A"}<br>
+       <b>Country:</b> ${pt.country || "N/A"}`
+      );
+      markers.push(marker);
     }
   });
 
-  if (latlngs.length) map.fitBounds(latlngs);
+  markers.forEach((m) => markersLayer.addLayer(m));
+
+  if (!mapHasFitted && latlngs.length) {
+    map.flyToBounds(latlngs, { padding: [40, 40], duration: 0.8, maxZoom: 8 });
+    mapHasFitted = true;
+  }
 }
 function populateCountryFilter(e) {
   const t = new Set(e.map((e) => e.country).filter(Boolean)),
@@ -493,12 +607,13 @@ function populateYearFilter(e) {
       }));
 }
 function createDisasterIcon(type) {
-  const icon = disasterIcons[type.toLowerCase()] || disasterIcons.default;
+  const key = normalizeDisasterType(type);
+  const meta = DISASTER_TYPE_META[key];
   return L.divIcon({
-    html: `<span style="font-size: 24px;">${icon}</span>`,
+    html: `<span class="disaster-marker-pill" style="border-color:${meta.color};">${meta.icon}</span>`,
     className: "disaster-marker",
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
   });
 } // Create custom divIcon for emojis
 // Attach menu and UI handlers
@@ -701,10 +816,15 @@ downloadReportBtn.addEventListener("click", function () {
   document
     .getElementById("generateAnalysisBtn")
     .addEventListener("click", async function () {
+      const btn = this;
+      if (btn.classList.contains("is-loading")) return;
       const analysisResult = document.getElementById("analysisResult");
       const analysisContent = document.getElementById("analysisContent");
+      const labelEl = btn.querySelector(".ai-action-label");
+      const iconEl = btn.querySelector(".ai-action-icon");
+      const originalLabel = labelEl ? labelEl.textContent : "";
+      const originalIcon = iconEl ? iconEl.innerHTML : "";
 
-      // Get currently displayed disasters
       const currentDisasters = [];
       markersLayer.eachLayer((marker) => {
         const position = marker.getLatLng();
@@ -716,8 +836,14 @@ downloadReportBtn.addEventListener("click", function () {
         });
       });
 
-      analysisContent.innerHTML =
-        '<div class="loading">Generating analysis...</div>';
+      btn.classList.add("is-loading");
+      btn.disabled = true;
+      if (labelEl) labelEl.textContent = "Analyzing…";
+      if (iconEl)
+        iconEl.innerHTML =
+          '<svg class="ai-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 3a9 9 0 0 1 9 9"/></svg>';
+
+      analysisContent.innerHTML = '<div class="loading">Generating analysis...</div>';
       analysisResult.style.display = "block";
 
       try {
@@ -739,9 +865,13 @@ downloadReportBtn.addEventListener("click", function () {
     `;
         addLog("info", "Generated disaster analysis report");
       } catch (error) {
-        analysisContent.innerHTML =
-          '<div class="error">Failed to generate analysis</div>';
+        analysisContent.innerHTML = '<div class="error">Failed to generate analysis</div>';
         addLog("error", "Failed to generate analysis: " + error.message);
+      } finally {
+        btn.classList.remove("is-loading");
+        btn.disabled = false;
+        if (labelEl) labelEl.textContent = originalLabel;
+        if (iconEl) iconEl.innerHTML = originalIcon;
       }
     }));
 
