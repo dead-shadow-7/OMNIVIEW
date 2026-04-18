@@ -8,6 +8,7 @@ const API_CONFIG = {
     SHIPS: "/api/ships",
     EXTRACT_ROADS: "/api/extract_roads",
     NEWS: "/api/news",
+    NEWS_BRIEF: "/api/news_brief",
     GENERATE_REPORT: "/api/generate_report",
     DISASTER_CSV: "/api/disaster-csv",
     ANALYZE_DISASTERS: "/api/analyze-disasters",

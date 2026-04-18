@@ -45,6 +45,7 @@ HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 NEWS_API_KEY = os.getenv("NEWS_API_KEY")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 # Validate required API keys
 if not GEMINI_API_KEY or not GOOGLE_API_KEY or not GOOGLE_CX:
@@ -993,9 +994,96 @@ def get_news():
     except Exception as e:
         app.logger.error(f"News fetch error: {e}")
         return jsonify({
-            "error": "Failed to fetch news articles", 
+            "error": "Failed to fetch news articles",
             "details": str(e)
         }), 500
+
+
+def _generate_news_brief(query, articles):
+    """Build a 3-sentence disaster brief from article headlines using OpenRouter → Gemini."""
+    if not articles:
+        return None
+
+    lines = []
+    for i, a in enumerate(articles[:15], start=1):
+        title = (a.get('title') or '').strip()
+        source = (a.get('source') or '').strip()
+        date = (a.get('date') or '').strip()
+        lines.append(f"{i}. [{date}] {title} | {source}")
+    headlines = "\n".join(lines)
+
+    prompt = (
+        f'You are a disaster intelligence analyst. Given these news headlines about "{query}", '
+        f"write a 3-sentence situation brief covering: what happened + where + when, key impact "
+        f"figures if visible (casualties, displaced, damage), and responding agencies if mentioned. "
+        f"Plain text only. No preamble. No markdown headers. No bullet points. "
+        f"If the headlines seem unrelated to the query, say so honestly in one sentence instead.\n\n"
+        f"Headlines:\n{headlines}"
+    )
+
+    if OPENROUTER_API_KEY:
+        try:
+            response = requests.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": "openrouter/elephant-alpha",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": 400,
+                    "temperature": 0.3,
+                },
+                timeout=20,
+            )
+            if response.status_code == 200:
+                content = response.json().get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+                if content:
+                    return content
+            app.logger.warning(f"OpenRouter brief returned {response.status_code}, falling back to Gemini")
+        except Exception as e:
+            app.logger.error(f"OpenRouter brief error: {e}")
+
+    if GEMINI_API_KEY:
+        try:
+            model = genai.GenerativeModel('gemini-2.5-flash')
+            response = model.generate_content(prompt)
+            if response and response.text:
+                return response.text.strip()
+        except Exception as e:
+            app.logger.error(f"Gemini brief fallback error: {e}")
+
+    return None
+
+
+@app.route("/api/news_brief", methods=["POST"])
+def get_news_brief():
+    try:
+        data = request.json or {}
+        query = (data.get("query") or "").strip()
+        articles = data.get("articles") or []
+
+        if not query or not articles:
+            return jsonify({"error": "query and articles required"}), 400
+
+        app.logger.info(f"🧠 Generating brief for: {query} ({len(articles)} articles)")
+        brief = _generate_news_brief(query, articles)
+
+        if not brief:
+            return jsonify({"error": "Brief generation unavailable"}), 503
+
+        return jsonify({
+            "brief": brief,
+            "query": query,
+            "article_count": len(articles),
+            "generated_at": datetime.now().isoformat(),
+            "status": "success",
+        })
+    except Exception as e:
+        app.logger.error(f"News brief error: {e}")
+        return jsonify({"error": "Failed to generate brief", "details": str(e)}), 500
+
 
 @app.route("/api/images", methods=["POST"])
 def get_images():
