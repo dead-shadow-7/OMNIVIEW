@@ -84,6 +84,20 @@
           <button id="satelliteLayerBtn" class="layer-btn">Satellite</button>
         </div>
 
+        <!-- Aircraft Stats Pill -->
+        <div id="aircraftStats" class="aircraft-stats" style="display: none;">
+          <div class="aircraft-stats-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+          </div>
+          <div class="aircraft-stats-meta">
+            <div class="aircraft-stats-label">Flights Tracked</div>
+            <div class="aircraft-stats-value">
+              <span class="aircraft-stats-dot aircraft-stats-dot-pending" id="aircraftStatsDot"></span>
+              <span id="aircraftStatsText">Connecting…</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Map -->
         <div id="map"></div>
 
@@ -376,6 +390,8 @@
           // Hide overlays when switching sections
           if (shipView) shipView.style.display = 'none';
           document.getElementById('buildingPanel').style.display = 'none';
+          const aircraftStatsEl = document.getElementById('aircraftStats');
+          if (aircraftStatsEl) aircraftStatsEl.style.display = 'none';
           
           // Handle specific feature activation
           switch (index) {
@@ -403,14 +419,7 @@
               );
               break;
 
-            case 2: // Water Bodies
-              activeFeature = "water";
-              if (marineTrafficFrame) marineTrafficFrame.style.display = 'none';
-              mapDiv.style.display = 'block';
-              logger.info("Water bodies monitoring activated");
-              break;
-
-            case 3: // Ships
+            case 2: // Ships
               activeFeature = "ships";
               // Hide the map
               mapDiv.style.display = 'none';
@@ -446,11 +455,14 @@
               logger.info("Ships monitoring activated - MarineTraffic link available");
               break;
 
-            case 4: // Aircraft
+            case 3: // Aircraft
               activeFeature = "aircraft";
               if (marineTrafficFrame) marineTrafficFrame.style.display = 'none';
               mapDiv.style.display = 'block';
               logger.info("Aircraft tracking activated");
+              // Show stats pill in pending state
+              setAircraftStats("pending", "Connecting…");
+              if (aircraftStatsEl) aircraftStatsEl.style.display = 'flex';
               // Clear any existing interval
               if (updateFlightsInterval) {
                 clearInterval(updateFlightsInterval);
@@ -769,6 +781,19 @@
       let updateFlightsInterval;
       let allFlightStates = []; // Cache all flight data in memory
 
+      function setAircraftStats(state, text) {
+        const dot = document.getElementById("aircraftStatsDot");
+        const label = document.getElementById("aircraftStatsText");
+        if (!dot || !label) return;
+        dot.classList.remove(
+          "aircraft-stats-dot-on",
+          "aircraft-stats-dot-pending",
+          "aircraft-stats-dot-off"
+        );
+        dot.classList.add(`aircraft-stats-dot-${state}`);
+        label.textContent = text;
+      }
+
       function createRotatedPlaneIcon(heading) {
         const iconHtml = `
           <div style="
@@ -838,6 +863,12 @@
         }
 
         logger.info(`Showing ${toRender.length} of ${visible.length} aircraft in view`);
+        if (activeFeature === "aircraft") {
+          setAircraftStats(
+            allFlightStates.length > 0 ? "on" : "off",
+            `${allFlightStates.length.toLocaleString()} active · ${visible.length.toLocaleString()} in view`
+          );
+        }
       }
 
       // Fetch flight data from backend, then render visible planes
@@ -851,6 +882,7 @@
           if (!data.states || !Array.isArray(data.states)) {
             logger.warning("No flight data available or invalid format");
             allFlightStates = [];
+            if (activeFeature === "aircraft") setAircraftStats("off", "No data");
             return;
           }
 
@@ -859,6 +891,7 @@
           renderVisiblePlanes();
         } catch (err) {
           logger.error(`Failed to fetch aircraft data: ${err.message}`);
+          if (activeFeature === "aircraft") setAircraftStats("off", "Offline");
         }
       }
 
