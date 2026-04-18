@@ -1013,7 +1013,7 @@ def get_news():
 
 
 def _generate_news_brief(query, articles):
-    """Build a 3-sentence disaster brief from article headlines using OpenRouter → Gemini."""
+    """Build a detailed disaster brief from article headlines using OpenRouter → Gemini."""
     if not articles:
         return None
 
@@ -1022,14 +1022,23 @@ def _generate_news_brief(query, articles):
         title = (a.get('title') or '').strip()
         source = (a.get('source') or '').strip()
         date = (a.get('date') or '').strip()
-        lines.append(f"{i}. [{date}] {title} | {source}")
+        snippet = (a.get('snippet') or a.get('description') or '').strip()
+        entry = f"{i}. [{date}] {title} | {source}"
+        if snippet:
+            entry += f"\n   {snippet[:240]}"
+        lines.append(entry)
     headlines = "\n".join(lines)
 
     prompt = (
         f'You are a disaster intelligence analyst. Given these news headlines about "{query}", '
-        f"write a 3-sentence situation brief covering: what happened + where + when, key impact "
-        f"figures if visible (casualties, displaced, damage), and responding agencies if mentioned. "
-        f"Plain text only. No preamble. No markdown headers. No bullet points. "
+        f"write a detailed situation brief of 6–8 sentences arranged as two short paragraphs. "
+        f"Paragraph 1: what happened, where, and when — geographic scope, affected regions, "
+        f"and the timeline of the event. "
+        f"Paragraph 2: key impact figures where visible (casualties, displaced populations, "
+        f"infrastructure damage, economic loss), responding agencies or authorities involved, "
+        f"and any forward-looking outlook or ongoing risk. "
+        f"Use neutral analytical tone. Plain text only. Separate the two paragraphs with a blank line. "
+        f"No preamble, no markdown headers, no bullet points. "
         f"If the headlines seem unrelated to the query, say so honestly in one sentence instead.\n\n"
         f"Headlines:\n{headlines}"
     )
@@ -1045,7 +1054,7 @@ def _generate_news_brief(query, articles):
                 json={
                     "model": "openrouter/elephant-alpha",
                     "messages": [{"role": "user", "content": prompt}],
-                    "max_tokens": 400,
+                    "max_tokens": 700,
                     "temperature": 0.3,
                 },
                 timeout=20,
