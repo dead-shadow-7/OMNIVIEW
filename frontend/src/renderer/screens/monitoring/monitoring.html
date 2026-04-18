@@ -502,17 +502,6 @@
         ];
       }
 
-      document
-        .querySelectorAll(".monitoring-item")[1]
-        .addEventListener("click", () => {
-          // Enable area selection for roads tab
-          areaSelectMode = true;
-          map.getContainer().style.cursor = "crosshair";
-          alert(
-            "Click on the map to select the center of a 1km x 1km area for road extraction."
-          );
-        });
-
       // Replace the existing map click handler
       map.on("click", function (e) {
         if (!areaSelectMode) return;
