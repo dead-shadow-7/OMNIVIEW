@@ -279,9 +279,90 @@
 
 <!-- Pre-Disaster Section -->
 <div class="pre-disaster-section" id="preDisasterContent" style="display: none;">
-  <div id="preWeatherHeadline" class="weather-headline"></div>
-  <div class="section-title">Pre-Disaster Weather Explorer</div>
-  <div id="preDisasterMap" class="map-container"></div>
+  <div class="pre-header">
+    <div class="pre-header-main">
+      <div class="pre-header-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="2" x2="12" y2="9"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="8 6 12 2 16 6"/></svg>
+      </div>
+      <div class="pre-header-text">
+        <div class="pre-header-title">Pre-Disaster Weather Explorer</div>
+        <div class="pre-header-subtitle">Search a place or click the map to pull live weather signals and a risk assessment for any point on Earth.</div>
+      </div>
+    </div>
+    <div class="pre-header-status" id="preLocationStatus">
+      <span class="pre-status-dot"></span>
+      <span class="pre-status-text">No location selected</span>
+    </div>
+  </div>
+
+  <div class="pre-toolbar">
+    <form class="pre-search" id="preSearchForm" autocomplete="off">
+      <svg class="pre-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="pre-search-input" id="preSearchInput" placeholder="Search for a city, region, or coordinates..." />
+      <button type="submit" class="pre-search-btn" id="preSearchBtn">Search</button>
+    </form>
+    <button type="button" class="pre-locate-btn" id="preLocateBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="10"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
+      <span>My Location</span>
+    </button>
+  </div>
+
+  <div class="pre-stats" id="preStats">
+    <div class="pre-stat-tile" data-kind="temp">
+      <div class="pre-stat-icon pre-stat-icon-temp">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+      </div>
+      <div class="pre-stat-body">
+        <div class="pre-stat-label">Temperature</div>
+        <div class="pre-stat-value" data-value="temp">—</div>
+      </div>
+    </div>
+    <div class="pre-stat-tile" data-kind="rain">
+      <div class="pre-stat-icon pre-stat-icon-rain">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16.2A4.5 4.5 0 0 0 17.5 8h-1.8A7 7 0 1 0 4 14.9"/><line x1="8" y1="19" x2="8" y2="21"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="16" y1="19" x2="16" y2="21"/></svg>
+      </div>
+      <div class="pre-stat-body">
+        <div class="pre-stat-label">Precipitation</div>
+        <div class="pre-stat-value" data-value="rain">—</div>
+      </div>
+    </div>
+    <div class="pre-stat-tile" data-kind="wind">
+      <div class="pre-stat-icon pre-stat-icon-wind">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>
+      </div>
+      <div class="pre-stat-body">
+        <div class="pre-stat-label">Wind Speed</div>
+        <div class="pre-stat-value" data-value="wind">—</div>
+      </div>
+    </div>
+    <div class="pre-stat-tile" data-kind="cloud">
+      <div class="pre-stat-icon pre-stat-icon-cloud">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+      </div>
+      <div class="pre-stat-body">
+        <div class="pre-stat-label">Cloud Cover</div>
+        <div class="pre-stat-value" data-value="cloud">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pre-risk" id="preRisk" data-level="idle">
+    <div class="pre-risk-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <div class="pre-risk-body">
+      <div class="pre-risk-level" id="preRiskLevel">Awaiting location</div>
+      <div class="pre-risk-text" id="preRiskText">Pick a location on the map or search above to receive a live weather risk assessment.</div>
+    </div>
+  </div>
+
+  <div class="pre-map-wrap">
+    <div id="preDisasterMap"></div>
+    <div class="pre-map-hint" id="preMapHint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.2V7a3 3 0 1 1 6 0v4.2"/><path d="M12 22l-3.5-3.5a7 7 0 1 1 7 0L12 22z"/><circle cx="12" cy="11" r="2"/></svg>
+      <span>Click anywhere on the map to inspect weather there</span>
+    </div>
+  </div>
 </div>
 
 <!-- Bottom Panel -->

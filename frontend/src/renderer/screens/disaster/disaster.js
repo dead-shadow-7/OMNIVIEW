@@ -875,7 +875,7 @@ downloadReportBtn.addEventListener("click", function () {
       }
     }));
 
-// --- Pre-Disaster Map (like Post Disaster, but shows weather on click) ---
+// --- Pre-Disaster Weather Explorer ---
 let preDisasterMap, preDisasterWeatherMarker;
 
 function showPreDisaster() {
@@ -884,82 +884,232 @@ function showPreDisaster() {
   reportSection.style.display = "none";
   postDisasterSection.style.display = "none";
   document.getElementById("postDisasterReportSection").style.display = "none";
-  preDisasterContent.style.display = "block";
+  preDisasterContent.style.display = "flex";
 
-  // Hide search container
   searchContainer.classList.add("hidden");
-
-  // Hide content area for pre-disaster
   document.querySelector(".content-area").style.display = "none";
 
-  document.getElementById("preWeatherHeadline").innerHTML = "";
   if (!preDisasterMap) initPreDisasterMap();
+  setTimeout(() => preDisasterMap && preDisasterMap.invalidateSize(), 50);
 }
 
 function hidePreDisaster() {
   preDisasterContent.style.display = "none";
-  document.getElementById("preWeatherHeadline").innerHTML = "";
-
-  // Show content area when leaving pre-disaster
   document.querySelector(".content-area").style.display = "block";
 }
 
 function initPreDisasterMap() {
-  preDisasterMap = L.map("preDisasterMap").setView([20, 0], 2);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    zoom: 5,
+  preDisasterMap = L.map("preDisasterMap", {
+    zoomControl: true,
+    worldCopyJump: false,
+    attributionControl: false,
+    preferCanvas: true,
+  }).setView([20, 0], 3);
+
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png", {
     minZoom: 3,
-    maxZoom: 18,
+    maxZoom: 19,
     maxBounds: [
       [-90, -180],
       [90, 180],
     ],
-    attribution: "&copy; OpenStreetMap contributors",
+    maxBoundsViscosity: 1.0,
+    attribution: "&copy; OpenStreetMap &copy; CARTO",
+    subdomains: "abcd",
     noWrap: true,
   }).addTo(preDisasterMap);
+  L.control.attribution({ position: "bottomright", prefix: false }).addTo(preDisasterMap);
 
   preDisasterMap.setMaxBounds([
     [-90, -180],
     [90, 180],
   ]);
-  preDisasterMap.on("click", function (e) {
+
+  preDisasterMap.on("click", (e) => {
     const { lat, lng } = e.latlng;
-    if (preDisasterWeatherMarker)
-      preDisasterMap.removeLayer(preDisasterWeatherMarker);
-    preDisasterWeatherMarker = L.marker([lat, lng]).addTo(preDisasterMap);
-    document.getElementById("preWeatherHeadline").innerHTML =
-      '<div class="loading">Fetching weather...</div>';
-    fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,precipitation,weather_code,windspeed_10m,cloud_cover&timezone=auto`
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        const w = data.current;
-        const headline = `
-          <div>
-            <span class="weather-temp">Weather at (${lat.toFixed(2)}, ${lng.toFixed(2)}):
-            ${w.temperature_2m}°C, ${w.precipitation}mm rain, ${w.windspeed_10m}km/h wind, ${w.cloud_cover}% clouds.</span>
-            <span class="weather-ai-summary"><b>AI:</b> ${getAISummary(w)}</span>
-          </div>
-        `;
-        document.getElementById("preWeatherHeadline").innerHTML = headline;
-      })
-      .catch(() => {
-        document.getElementById("preWeatherHeadline").innerHTML =
-          '<div class="error">Failed to fetch weather data.</div>';
-      });
+    fetchPreWeather(lat, lng);
   });
+
+  // Wire toolbar controls
+  const form = document.getElementById("preSearchForm");
+  const input = document.getElementById("preSearchInput");
+  if (form) {
+    form.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      const q = (input.value || "").trim();
+      if (!q) return;
+      geocodePreLocation(q);
+    });
+  }
+
+  const locateBtn = document.getElementById("preLocateBtn");
+  if (locateBtn) {
+    locateBtn.addEventListener("click", () => {
+      if (!navigator.geolocation) {
+        addLog("error", "Geolocation is not supported in this environment.");
+        return;
+      }
+      setPreStatus("loading", "Locating…");
+      navigator.geolocation.getCurrentPosition(
+        (pos) => fetchPreWeather(pos.coords.latitude, pos.coords.longitude),
+        () => {
+          setPreStatus("idle", "Location permission denied");
+          addLog("error", "Unable to access device location.");
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    });
+  }
 }
 
-// Hardcoded AI summary logic (demo)
-function getAISummary(w) {
-  if (w.precipitation > 20)
-    return "⚠️ High risk of flooding due to heavy rainfall.";
-  if (w.temperature_2m > 40)
-    return "⚠️ Extreme heat detected. Possible heatwave.";
-  if (w.windspeed_10m > 60) return "⚠️ Severe wind speeds. Storm risk present.";
-  if (w.cloud_cover > 90) return "Heavy cloud cover, possible storms.";
-  return "No immediate disaster risk detected.";
+function geocodePreLocation(query) {
+  setPreStatus("loading", `Searching "${query}"…`);
+  const coordMatch = query.match(/^\s*(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)\s*$/);
+  if (coordMatch) {
+    const lat = parseFloat(coordMatch[1]);
+    const lng = parseFloat(coordMatch[2]);
+    if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+      fetchPreWeather(lat, lng, query);
+      return;
+    }
+  }
+  fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`, {
+    headers: { "Accept-Language": "en" },
+  })
+    .then((r) => r.json())
+    .then((results) => {
+      if (!results || !results.length) {
+        setPreStatus("idle", "No matching place found");
+        addLog("error", `No results for "${query}".`);
+        return;
+      }
+      const r = results[0];
+      fetchPreWeather(parseFloat(r.lat), parseFloat(r.lon), r.display_name);
+    })
+    .catch((err) => {
+      setPreStatus("idle", "Search failed");
+      addLog("error", "Geocoding error: " + err.message);
+    });
+}
+
+function fetchPreWeather(lat, lng, label) {
+  if (preDisasterWeatherMarker) preDisasterMap.removeLayer(preDisasterWeatherMarker);
+  preDisasterWeatherMarker = L.marker([lat, lng]).addTo(preDisasterMap);
+  preDisasterMap.flyTo([lat, lng], Math.max(preDisasterMap.getZoom(), 6), { duration: 0.6 });
+
+  const hint = document.getElementById("preMapHint");
+  if (hint) hint.classList.add("is-hidden");
+
+  setPreStatus("loading", "Fetching weather…");
+  resetPreStats();
+
+  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,precipitation,weather_code,windspeed_10m,cloud_cover&timezone=auto`)
+    .then((res) => res.json())
+    .then((data) => {
+      const w = data && data.current;
+      if (!w) throw new Error("Missing current weather");
+      renderPreWeather(lat, lng, w, label);
+      addLog("info", `Weather fetched for ${label || `${lat.toFixed(2)}, ${lng.toFixed(2)}`}.`);
+    })
+    .catch((err) => {
+      setPreStatus("idle", "Fetch failed");
+      addLog("error", "Weather fetch error: " + (err.message || err));
+      const risk = document.getElementById("preRisk");
+      if (risk) {
+        risk.dataset.level = "critical";
+        document.getElementById("preRiskLevel").textContent = "Data unavailable";
+        document.getElementById("preRiskText").textContent = "Couldn't reach the weather service. Try another location or retry in a moment.";
+      }
+    });
+}
+
+function renderPreWeather(lat, lng, w, label) {
+  const temp = Number(w.temperature_2m);
+  const rain = Number(w.precipitation) || 0;
+  const wind = Number(w.windspeed_10m) || 0;
+  const cloud = Number(w.cloud_cover) || 0;
+
+  setPreStat("temp", `${temp.toFixed(1)}°C`);
+  setPreStat("rain", `${rain.toFixed(1)} mm`);
+  setPreStat("wind", `${wind.toFixed(0)} km/h`);
+  setPreStat("cloud", `${cloud.toFixed(0)}%`);
+
+  const displayLabel = label || `${lat.toFixed(2)}, ${lng.toFixed(2)}`;
+  setPreStatus("active", truncate(displayLabel, 48));
+
+  const risk = assessPreRisk({ temp, rain, wind, cloud });
+  const riskEl = document.getElementById("preRisk");
+  if (riskEl) {
+    riskEl.dataset.level = risk.level;
+    document.getElementById("preRiskLevel").textContent = risk.title;
+    document.getElementById("preRiskText").textContent = risk.text;
+  }
+
+  if (preDisasterWeatherMarker) {
+    const popupHtml = `
+      <div class="pre-popup">
+        <div class="pre-popup-title">${escapeHtml(displayLabel)}</div>
+        <div class="pre-popup-row"><span>Temperature</span><b>${temp.toFixed(1)}°C</b></div>
+        <div class="pre-popup-row"><span>Precipitation</span><b>${rain.toFixed(1)} mm</b></div>
+        <div class="pre-popup-row"><span>Wind</span><b>${wind.toFixed(0)} km/h</b></div>
+        <div class="pre-popup-row"><span>Cloud Cover</span><b>${cloud.toFixed(0)}%</b></div>
+        <div class="pre-popup-coord">${lat.toFixed(4)}, ${lng.toFixed(4)}</div>
+      </div>`;
+    preDisasterWeatherMarker.bindPopup(popupHtml, { closeButton: true, maxWidth: 280 }).openPopup();
+  }
+}
+
+function assessPreRisk(w) {
+  if (w.rain > 25 || w.wind > 80) {
+    return { level: "critical", title: "Critical risk",
+      text: `Dangerous conditions detected — ${w.rain > 25 ? "heavy rainfall pointing to flood risk" : "severe winds suggesting storm activity"}. Monitor advisories closely.` };
+  }
+  if (w.temp > 40) {
+    return { level: "critical", title: "Extreme heat",
+      text: "Temperatures above 40°C indicate heatwave-level exposure. Vulnerable populations at elevated risk." };
+  }
+  if (w.rain > 10 || w.wind > 50 || w.temp > 35 || w.temp < -15) {
+    return { level: "warning", title: "Elevated risk",
+      text: "Weather drivers are trending into hazardous territory. Worth tracking over the next few hours." };
+  }
+  if (w.cloud > 85 || w.rain > 2 || w.wind > 30) {
+    return { level: "caution", title: "Minor advisory",
+      text: "Conditions are unsettled but not dangerous. Useful baseline for monitoring change." };
+  }
+  return { level: "safe", title: "No immediate risk",
+    text: "All current weather signals are within normal, non-disaster ranges." };
+}
+
+function setPreStat(kind, value) {
+  const el = document.querySelector(`#preStats .pre-stat-value[data-value="${kind}"]`);
+  if (!el) return;
+  el.textContent = value;
+  el.dataset.empty = "false";
+  const tile = el.closest(".pre-stat-tile");
+  if (tile) tile.classList.add("is-populated");
+}
+
+function resetPreStats() {
+  document.querySelectorAll("#preStats .pre-stat-value").forEach((el) => {
+    el.textContent = "—";
+    el.dataset.empty = "true";
+  });
+  document.querySelectorAll("#preStats .pre-stat-tile").forEach((t) => t.classList.remove("is-populated"));
+}
+
+function setPreStatus(state, text) {
+  const el = document.getElementById("preLocationStatus");
+  if (!el) return;
+  el.classList.remove("is-active", "is-loading");
+  if (state === "active") el.classList.add("is-active");
+  if (state === "loading") el.classList.add("is-loading");
+  const textEl = el.querySelector(".pre-status-text");
+  if (textEl) textEl.textContent = text;
+}
+
+function truncate(s, n) {
+  if (!s) return s;
+  return s.length > n ? s.slice(0, n - 1) + "…" : s;
 }
 
 // (menu click handling is attached earlier in the file)
