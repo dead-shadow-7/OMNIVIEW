@@ -111,11 +111,86 @@
         <div class="content-area">
   <!-- Default Content -->
   <div class="default-content" id="defaultContent">
-    <h2>Welcome to Disaster Dashboard</h2>
-    <p>
-      Stay updated with the latest disaster reports and emergency
-      alerts. Use the sidebar to navigate.
-    </p>
+    <div class="hero-decoration" aria-hidden="true">
+      <svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="100" cy="100" r="90"/>
+        <ellipse cx="100" cy="100" rx="90" ry="36"/>
+        <ellipse cx="100" cy="100" rx="36" ry="90"/>
+        <path d="M10 100 Q 100 60 190 100"/>
+        <path d="M10 100 Q 100 140 190 100"/>
+      </svg>
+    </div>
+
+    <div class="hero-section">
+      <div class="hero-eyebrow">
+        <span class="hero-pulse"></span>
+        <span>Live disaster intelligence</span>
+      </div>
+      <h1 class="hero-title">Eyes on every emergency.</h1>
+      <p class="hero-subtitle">
+        Search active disasters, fetch ranked coverage from trusted news sources,
+        and read AI-synthesized situation briefs — all from one place.
+      </p>
+    </div>
+
+    <div class="status-tile-row">
+      <div class="status-tile" id="statusNews">
+        <div class="status-tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><line x1="10" y1="6" x2="18" y2="6"/><line x1="10" y1="10" x2="18" y2="10"/><line x1="10" y1="14" x2="14" y2="14"/></svg></div>
+        <div class="status-tile-meta">
+          <div class="status-tile-label">News Service</div>
+          <div class="status-tile-value"><span class="status-dot status-dot-on"></span><span data-status-text>Online</span></div>
+        </div>
+      </div>
+      <div class="status-tile" id="statusBrief">
+        <div class="status-tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18 9.4l-4.2 1.8L12 16l-1.8-4.8L6 9.4l4.2-1.8L12 3z"/><path d="M19 14l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9.9-2.1z"/></svg></div>
+        <div class="status-tile-meta">
+          <div class="status-tile-label">AI Brief</div>
+          <div class="status-tile-value"><span class="status-dot status-dot-on"></span><span data-status-text>Ready</span></div>
+        </div>
+      </div>
+      <div class="status-tile" id="statusFlights">
+        <div class="status-tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></div>
+        <div class="status-tile-meta">
+          <div class="status-tile-label">Flights Tracked</div>
+          <div class="status-tile-value"><span class="status-dot status-dot-pending" id="flightsDot"></span><span data-status-text id="flightsCount">Connecting…</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="trending-section">
+      <div class="trending-header">Trending right now</div>
+      <div class="trending-grid">
+        <button class="trending-card" data-query="wildfires today">
+          <div class="trending-card-icon trending-fire"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/></svg></div>
+          <div class="trending-card-text">
+            <div class="trending-card-title">Active Wildfires</div>
+            <div class="trending-card-desc">Live coverage worldwide</div>
+          </div>
+          <svg class="trending-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+        <button class="trending-card" data-query="floods this week">
+          <div class="trending-card-icon trending-water"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s2-3 5-3 5 3 5 3 2-3 5-3 5 3 5 3"/><path d="M2 18s2-3 5-3 5 3 5 3 2-3 5-3 5 3 5 3"/></svg></div>
+          <div class="trending-card-text">
+            <div class="trending-card-title">Recent Floods</div>
+            <div class="trending-card-desc">Past 7 days</div>
+          </div>
+          <svg class="trending-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+        <button class="trending-card" data-query="earthquake 24 hours">
+          <div class="trending-card-icon trending-quake"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 12 6 12 9 4 12 20 15 8 18 16 21 12"/></svg></div>
+          <div class="trending-card-text">
+            <div class="trending-card-title">Earthquakes</div>
+            <div class="trending-card-desc">Last 24 hours</div>
+          </div>
+          <svg class="trending-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="hero-hint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+      <span>or pick a topic chip above</span>
+    </div>
   </div>
 
   <!-- News Results -->

@@ -529,6 +529,39 @@ document.querySelectorAll(".quick-chip").forEach((chip) => {
   });
 });
 
+document.querySelectorAll(".trending-card").forEach((card) => {
+  card.addEventListener("click", function () {
+    const q = this.dataset.query;
+    if (!q) return;
+    searchInput.value = q;
+    setActiveChip(q);
+    performSearch();
+  });
+});
+
+(function loadFlightsTile() {
+  const dot = document.getElementById("flightsDot");
+  const text = document.getElementById("flightsCount");
+  if (!dot || !text) return;
+  fetch(API_CONFIG.getUrl("FLIGHTS"))
+    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+    .then((data) => {
+      const count =
+        (data && Array.isArray(data.states) && data.states.length) ||
+        (data && data.count) ||
+        (data && Array.isArray(data.flights) && data.flights.length) ||
+        0;
+      dot.classList.remove("status-dot-pending");
+      dot.classList.add(count > 0 ? "status-dot-on" : "status-dot-off");
+      text.textContent = count > 0 ? `${count.toLocaleString()} active` : "No data";
+    })
+    .catch(() => {
+      dot.classList.remove("status-dot-pending");
+      dot.classList.add("status-dot-off");
+      text.textContent = "Offline";
+    });
+})();
+
 function setActiveTimeOption(when) {
   currentWhen = when;
   document.querySelectorAll(".time-option").forEach((opt) => {
