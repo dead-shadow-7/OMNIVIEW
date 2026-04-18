@@ -169,6 +169,7 @@ function generateReport() {
 const searchContainer = document.querySelector(".search-container");
 function loadDefaultContent() {
   hideBrief();
+  if (typeof setActiveChip === "function") setActiveChip(null);
   ((isSearching = !1),
     (searchInput.value = ""),
     (defaultContent.style.display = "block"),
@@ -431,6 +432,25 @@ menuItems.forEach((e) => {
 searchBtn.addEventListener("click", performSearch);
 searchInput.addEventListener("keypress", function (e) {
   "Enter" === e.key && performSearch();
+});
+searchInput.addEventListener("input", function () {
+  setActiveChip(null);
+});
+
+function setActiveChip(query) {
+  document.querySelectorAll(".quick-chip").forEach((chip) => {
+    chip.classList.toggle("active", query !== null && chip.dataset.query === query);
+  });
+}
+
+document.querySelectorAll(".quick-chip").forEach((chip) => {
+  chip.addEventListener("click", function () {
+    const q = this.dataset.query;
+    if (!q) return;
+    searchInput.value = q;
+    setActiveChip(q);
+    performSearch();
+  });
 });
 
 // Standalone Post Disaster Report generator wiring

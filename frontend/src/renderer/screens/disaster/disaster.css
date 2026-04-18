@@ -86,6 +86,60 @@
   display: none;
 }
 
+.quick-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  max-width: 1100px;
+}
+
+.quick-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-default);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.quick-chip svg {
+  width: 14px;
+  height: 14px;
+  color: var(--text-secondary);
+  transition: color 0.18s ease;
+}
+
+.quick-chip:hover {
+  background: var(--bg-elevated);
+  border-color: var(--accent);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -6px rgba(59, 130, 246, 0.4);
+}
+
+.quick-chip:hover svg {
+  color: var(--accent);
+}
+
+.quick-chip.active {
+  background: var(--accent-subtle);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.quick-chip.active svg {
+  color: var(--accent);
+}
+
 .search-box {
   display: flex;
   align-items: center;
