@@ -287,12 +287,308 @@ class BuildingChangeDetection {
   }
 }
 
+// Glacial Lake Change Detection Class
+class GlacialLakeDetection {
+  constructor() {
+    this.image1 = null;
+    this.image2 = null;
+    this.isProcessing = false;
+    this.initializeEventListeners();
+  }
+
+  initializeEventListeners() {
+    document.getElementById('lakeImage1Upload').addEventListener('click', () => {
+      document.getElementById('lakeImage1Input').click();
+    });
+    document.getElementById('lakeImage2Upload').addEventListener('click', () => {
+      document.getElementById('lakeImage2Input').click();
+    });
+
+    document.getElementById('lakeImage1Input').addEventListener('change', (e) => {
+      this.handleImageUpload(e, 1);
+    });
+    document.getElementById('lakeImage2Input').addEventListener('change', (e) => {
+      this.handleImageUpload(e, 2);
+    });
+
+    this.setupDragAndDrop('lakeImage1Upload', 1);
+    this.setupDragAndDrop('lakeImage2Upload', 2);
+
+    document.getElementById('runLakeAnalysisBtn').addEventListener('click', () => {
+      this.runComparison();
+    });
+    document.getElementById('resetLakeAnalysisBtn').addEventListener('click', () => {
+      this.reset();
+    });
+    document.getElementById('closeGlacialLakePanel').addEventListener('click', () => {
+      this.closePanel();
+    });
+
+    const slider = document.getElementById('lakeThreshold');
+    const sliderValue = document.getElementById('lakeThresholdValue');
+    slider.addEventListener('input', () => {
+      sliderValue.textContent = parseFloat(slider.value).toFixed(2);
+    });
+  }
+
+  setupDragAndDrop(uploadAreaId, slot) {
+    const uploadArea = document.getElementById(uploadAreaId);
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+    uploadArea.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+    });
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        this.processImageFile(files[0], slot);
+      }
+    });
+  }
+
+  handleImageUpload(event, slot) {
+    const file = event.target.files[0];
+    if (file) this.processImageFile(file, slot);
+  }
+
+  processImageFile(file, slot) {
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file');
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      alert('File size must be less than 20MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64Data = e.target.result;
+      if (slot === 1) {
+        this.image1 = base64Data;
+        this.updatePreview('lakeImage1Preview', 'lakeImage1Upload', base64Data);
+        logger.info('Glacial lake image (Time 1) uploaded');
+      } else {
+        this.image2 = base64Data;
+        this.updatePreview('lakeImage2Preview', 'lakeImage2Upload', base64Data);
+        logger.info('Glacial lake image (Time 2) uploaded');
+      }
+      this.updateRunButton();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  updatePreview(previewId, uploadAreaId, imageSrc) {
+    const preview = document.getElementById(previewId);
+    const uploadArea = document.getElementById(uploadAreaId);
+    preview.src = imageSrc;
+    preview.style.display = 'block';
+    const placeholder = uploadArea.querySelector('.upload-placeholder');
+    if (placeholder) placeholder.style.display = 'none';
+  }
+
+  updateRunButton() {
+    const btn = document.getElementById('runLakeAnalysisBtn');
+    btn.disabled = !(this.image1 && this.image2 && !this.isProcessing);
+  }
+
+  async runComparison() {
+    if (!this.image1 || !this.image2) {
+      alert('Please upload both Time 1 and Time 2 images');
+      return;
+    }
+
+    this.isProcessing = true;
+    this.updateRunButton();
+
+    const btn = document.getElementById('runLakeAnalysisBtn');
+    const btnText = btn.querySelector('.btn-text');
+    const btnLoader = btn.querySelector('.btn-loader');
+    btnText.style.display = 'none';
+    btnLoader.style.display = 'inline';
+
+    const threshold = parseFloat(document.getElementById('lakeThreshold').value);
+    const resolution = document.getElementById('lakeResolution').value;
+
+    logger.info('Running glacial lake change detection...');
+    speakText('Running glacial lake change detection');
+
+    try {
+      const response = await fetch(API_CONFIG.getUrl('GLACIAL_LAKE_CHANGE'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image1: this.image1,
+          image2: this.image2,
+          threshold,
+          resolution,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok || data.status !== 'success') {
+        const msg = data.error || `Server error (${response.status})`;
+        const details = data.details ? ` — ${data.details}` : '';
+        throw new Error(msg + details);
+      }
+
+      this.displayResults(data);
+      logger.success(`Lake comparison complete: ${data.stats.pct_change}% change`);
+      speakText(`Lake comparison complete. ${data.stats.pct_change} percent change`);
+    } catch (error) {
+      console.error('Glacial lake error:', error);
+      logger.error(`Lake comparison failed: ${error.message}`);
+      alert(`Lake comparison failed: ${error.message}`);
+    } finally {
+      this.isProcessing = false;
+      this.updateRunButton();
+      btnText.style.display = 'inline';
+      btnLoader.style.display = 'none';
+    }
+  }
+
+  displayResults(data) {
+    const s = data.stats;
+    const pct = Number(s.pct_change) || 0;
+    const delta = Number(s.delta_ha) || 0;
+
+    // Hero card — direction drives color + arrow
+    const hero = document.getElementById('lakeHeroCard');
+    const arrow = document.getElementById('lakeHeroArrow');
+    const pctEl = document.getElementById('lakeHeroPct');
+    const deltaEl = document.getElementById('lakeHeroDelta');
+
+    hero.classList.remove('lake-hero-up', 'lake-hero-down', 'lake-hero-flat');
+    if (Math.abs(pct) < 0.5) {
+      hero.classList.add('lake-hero-flat');
+      arrow.textContent = '→';
+    } else if (pct > 0) {
+      hero.classList.add('lake-hero-up');
+      arrow.textContent = '↗';
+    } else {
+      hero.classList.add('lake-hero-down');
+      arrow.textContent = '↘';
+    }
+    const pctSign = pct > 0 ? '+' : '';
+    const deltaSign = delta > 0 ? '+' : '';
+    pctEl.textContent = `${pctSign}${pct.toFixed(2)}%`;
+    deltaEl.textContent = `${deltaSign}${delta.toFixed(2)} ha net`;
+
+    // T1 vs T2
+    document.getElementById('lakeAreaT1').textContent = Number(s.area_t1_ha).toFixed(2);
+    document.getElementById('lakeAreaT2').textContent = Number(s.area_t2_ha).toFixed(2);
+
+    // Water balance proportional bar
+    const gained = Number(s.gained_ha) || 0;
+    const lost = Number(s.lost_ha) || 0;
+    const total = gained + lost;
+    const gainedPct = total > 0 ? (gained / total) * 100 : 0;
+    const lostPct = total > 0 ? (lost / total) * 100 : 0;
+    document.getElementById('lakeBalanceGained').style.width = `${gainedPct}%`;
+    document.getElementById('lakeBalanceLost').style.width = `${lostPct}%`;
+    document.getElementById('lakeGainedHa').textContent = `${gained.toFixed(2)} ha`;
+    document.getElementById('lakeLostHa').textContent = `${lost.toFixed(2)} ha`;
+    const totalChangedPx = (Number(s.gained) || 0) + (Number(s.lost) || 0);
+    document.getElementById('lakeBalanceMeta').textContent =
+      `${totalChangedPx.toLocaleString()} px changed`;
+
+    // Risk / context banner — interpretive text based on magnitude + direction
+    const banner = document.getElementById('lakeRiskBanner');
+    const riskIcon = document.getElementById('lakeRiskIcon');
+    const riskText = document.getElementById('lakeRiskText');
+    banner.classList.remove(
+      'lake-risk-neutral', 'lake-risk-info', 'lake-risk-warning', 'lake-risk-alert'
+    );
+    const mag = Math.abs(pct);
+    if (mag < 1) {
+      banner.classList.add('lake-risk-neutral');
+      riskIcon.textContent = '✓';
+      riskText.textContent = 'Lake extent appears stable between the two observations.';
+    } else if (pct > 0 && mag < 10) {
+      banner.classList.add('lake-risk-info');
+      riskIcon.textContent = 'ℹ';
+      riskText.textContent = 'Lake is expanding — consistent with glacial melt or seasonal inflow.';
+    } else if (pct > 0 && mag >= 10) {
+      banner.classList.add('lake-risk-warning');
+      riskIcon.textContent = '⚠';
+      riskText.textContent = 'Significant expansion detected — monitor for downstream GLOF risk.';
+    } else if (pct < 0 && mag < 10) {
+      banner.classList.add('lake-risk-info');
+      riskIcon.textContent = 'ℹ';
+      riskText.textContent = 'Lake is receding — possible seasonal drawdown or controlled drainage.';
+    } else {
+      banner.classList.add('lake-risk-alert');
+      riskIcon.textContent = '⚠';
+      riskText.textContent = 'Notable contraction — check for sudden drainage or outburst events.';
+    }
+
+    // Change map
+    if (data.change_image) {
+      document.getElementById('lakeChangeImage').src = data.change_image;
+      const dl = document.getElementById('downloadChangeBtn');
+      dl.onclick = () => {
+        const link = document.createElement('a');
+        link.href = data.change_image;
+        link.download = 'glacial_lake_change.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+    }
+
+    // Params actually used
+    document.getElementById('lakeParamThreshold').textContent =
+      Number(data.threshold).toFixed(2);
+    document.getElementById('lakeParamResolution').textContent =
+      `${data.resolution_m} m/px`;
+
+    document.getElementById('lakeResultsSection').style.display = 'block';
+  }
+
+  reset() {
+    this.image1 = null;
+    this.image2 = null;
+    ['lakeImage1Preview', 'lakeImage2Preview'].forEach(id => {
+      const img = document.getElementById(id);
+      img.style.display = 'none';
+      img.src = '';
+    });
+    ['lakeImage1Upload', 'lakeImage2Upload'].forEach(id => {
+      const placeholder = document.getElementById(id).querySelector('.upload-placeholder');
+      if (placeholder) placeholder.style.display = 'block';
+    });
+    document.getElementById('lakeImage1Input').value = '';
+    document.getElementById('lakeImage2Input').value = '';
+    document.getElementById('lakeResultsSection').style.display = 'none';
+    this.updateRunButton();
+    logger.info('Glacial lake analysis reset');
+  }
+
+  closePanel() {
+    document.getElementById('glacialLakePanel').style.display = 'none';
+    logger.info('Glacial lake panel closed');
+  }
+
+  showPanel() {
+    document.getElementById('glacialLakePanel').style.display = 'block';
+    logger.info('Glacial lake panel opened');
+    speakText('Glacial lake change detection panel opened');
+  }
+}
+
 // Global building change detection instance
 let buildingChangeDetection;
+let glacialLakeDetection;
 
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize building change detection
   buildingChangeDetection = new BuildingChangeDetection();
+  glacialLakeDetection = new GlacialLakeDetection();
 
   const t = document.getElementById("sidebarTitle"),
     e = document.getElementById("screenDropdown"),

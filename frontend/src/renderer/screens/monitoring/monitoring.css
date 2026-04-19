@@ -852,6 +852,44 @@ body {
   border: 1px solid var(--border-subtle);
 }
 
+/* ── Glacial Lake Controls ── */
+.lake-controls-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.lake-control-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.lake-slider {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.lake-select {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.lake-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
 /* ── Analysis Controls ── */
 .analysis-controls {
   display: flex;
@@ -950,6 +988,408 @@ body {
   max-height: 200px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
+}
+
+/* ── Glacial Lake Results ── */
+
+/* Hero summary card */
+.lake-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 14px;
+  border: 1px solid var(--border-default);
+  background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-elevated));
+  position: relative;
+  overflow: hidden;
+}
+
+.lake-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.25;
+  pointer-events: none;
+  background: radial-gradient(circle at 100% 0%, var(--hero-glow, transparent), transparent 60%);
+}
+
+.lake-hero-up {
+  --hero-glow: rgba(34, 197, 94, 0.45);
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+.lake-hero-down {
+  --hero-glow: rgba(239, 68, 68, 0.45);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.lake-hero-flat {
+  --hero-glow: rgba(148, 163, 184, 0.35);
+}
+
+.lake-hero-main {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.lake-hero-arrow {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.lake-hero-up .lake-hero-arrow,
+.lake-hero-up .lake-hero-pct {
+  color: #22c55e;
+}
+
+.lake-hero-down .lake-hero-arrow,
+.lake-hero-down .lake-hero-pct {
+  color: #ef4444;
+}
+
+.lake-hero-flat .lake-hero-arrow,
+.lake-hero-flat .lake-hero-pct {
+  color: var(--text-secondary);
+}
+
+.lake-hero-pct {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.lake-hero-sub {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+  text-align: right;
+}
+
+.lake-hero-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.lake-hero-delta {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* T1 vs T2 compare strip */
+.lake-compare {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.lake-compare-cell {
+  flex: 1;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+
+.lake-compare-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.lake-compare-value {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.lake-compare-unit {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: 4px;
+  font-weight: 500;
+}
+
+.lake-compare-arrow {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+}
+
+/* Water balance bar */
+.lake-balance {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+
+.lake-balance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.lake-balance-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.lake-balance-meta {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+}
+
+.lake-balance-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--bg-primary);
+  margin-bottom: 10px;
+  border: 1px solid var(--border-subtle);
+}
+
+.lake-balance-gained {
+  background: linear-gradient(90deg, #15803d, #22c55e);
+  transition: width 0.4s ease;
+}
+
+.lake-balance-lost {
+  background: linear-gradient(90deg, #b91c1c, #ef4444);
+  transition: width 0.4s ease;
+}
+
+.lake-balance-legend {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lake-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.lake-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.lake-legend-dot-gained { background: #22c55e; }
+.lake-legend-dot-lost { background: #ef4444; }
+
+.lake-legend-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.lake-legend-value {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Risk / context banner */
+.lake-risk-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  margin-bottom: 14px;
+  border: 1px solid var(--border-subtle);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.lake-risk-icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.lake-risk-text {
+  color: var(--text-primary);
+}
+
+.lake-risk-neutral {
+  background: rgba(148, 163, 184, 0.08);
+  border-color: rgba(148, 163, 184, 0.2);
+}
+.lake-risk-neutral .lake-risk-icon {
+  background: rgba(148, 163, 184, 0.2);
+  color: var(--text-secondary);
+}
+
+.lake-risk-info {
+  background: rgba(6, 182, 212, 0.08);
+  border-color: rgba(6, 182, 212, 0.25);
+}
+.lake-risk-info .lake-risk-icon {
+  background: rgba(6, 182, 212, 0.2);
+  color: var(--cyan);
+}
+
+.lake-risk-warning {
+  background: rgba(245, 158, 11, 0.09);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+.lake-risk-warning .lake-risk-icon {
+  background: rgba(245, 158, 11, 0.22);
+  color: var(--orange);
+}
+
+.lake-risk-alert {
+  background: rgba(239, 68, 68, 0.09);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+.lake-risk-alert .lake-risk-icon {
+  background: rgba(239, 68, 68, 0.22);
+  color: var(--red);
+}
+
+/* Change map block */
+.lake-change-wrap {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.lake-change-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.lake-change-header h5 {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lake-download-btn {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.lake-download-btn:hover {
+  background: var(--accent-subtle);
+  color: var(--accent);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.lake-change-image {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  display: block;
+}
+
+.lake-change-legend {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.lake-chip {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.lake-chip-stable {
+  background: rgba(59, 130, 246, 0.14);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.lake-chip-gained {
+  background: rgba(34, 197, 94, 0.14);
+  color: #4ade80;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.lake-chip-lost {
+  background: rgba(239, 68, 68, 0.14);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.lake-params {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.lake-params b {
+  color: var(--text-secondary);
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 600;
+}
+
+.lake-params-sep {
+  opacity: 0.4;
 }
 
 /* ── Leaflet Popup Dark Theme ── */

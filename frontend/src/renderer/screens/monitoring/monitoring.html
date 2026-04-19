@@ -57,6 +57,10 @@
             <div class="item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></div>
             <span>Aircraft</span>
           </div>
+          <div class="monitoring-item">
+            <div class="item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7l4 4 4-4 4 4 4-4 2 2v10H1V9l2-2z"/><path d="M1 21h22"/></svg></div>
+            <span>Glacial Lakes</span>
+          </div>
         </div>
 
         <button class="analyze-btn">Analyze</button>
@@ -180,6 +184,150 @@
                   <h5>Overlay View</h5>
                   <img id="overlayImage" class="result-image" alt="Overlay view">
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Glacial Lake Change Detection Panel -->
+        <div id="glacialLakePanel" class="content-panel" style="display: none;">
+          <div class="panel-content">
+            <div class="panel-header">
+              <h3>Glacial Lake Change Detection</h3>
+              <button id="closeGlacialLakePanel" class="close-panel-btn">×</button>
+            </div>
+
+            <div class="upload-section">
+              <div class="upload-row">
+                <div class="upload-column">
+                  <label class="upload-label">Image at Time 1</label>
+                  <div class="upload-area" id="lakeImage1Upload">
+                    <div class="upload-placeholder">
+                      <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+                      <div class="upload-text">Click to upload or drag & drop</div>
+                      <div class="upload-hint">Supported: JPG, PNG</div>
+                    </div>
+                    <input type="file" id="lakeImage1Input" accept="image/*" style="display: none;">
+                    <img id="lakeImage1Preview" class="image-preview" style="display: none;">
+                  </div>
+                </div>
+
+                <div class="upload-column">
+                  <label class="upload-label">Image at Time 2</label>
+                  <div class="upload-area" id="lakeImage2Upload">
+                    <div class="upload-placeholder">
+                      <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+                      <div class="upload-text">Click to upload or drag & drop</div>
+                      <div class="upload-hint">Supported: JPG, PNG</div>
+                    </div>
+                    <input type="file" id="lakeImage2Input" accept="image/*" style="display: none;">
+                    <img id="lakeImage2Preview" class="image-preview" style="display: none;">
+                  </div>
+                </div>
+              </div>
+
+              <div class="lake-controls-row">
+                <div class="lake-control-group">
+                  <label class="upload-label" for="lakeThreshold">Confidence: <span id="lakeThresholdValue">0.50</span></label>
+                  <input type="range" id="lakeThreshold" min="0.1" max="0.9" step="0.05" value="0.5" class="lake-slider">
+                </div>
+                <div class="lake-control-group">
+                  <label class="upload-label" for="lakeResolution">Pixel Resolution</label>
+                  <select id="lakeResolution" class="lake-select">
+                    <option value="sentinel2" selected>Sentinel-2 (10 m)</option>
+                    <option value="landsat30">Landsat / GEE (30 m)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="analysis-controls">
+                <button id="runLakeAnalysisBtn" class="analyze-btn" disabled>
+                  <span class="btn-text">Compare Lakes</span>
+                  <span class="btn-loader" style="display: none;">Processing...</span>
+                </button>
+                <button id="resetLakeAnalysisBtn" class="reset-btn">Reset</button>
+              </div>
+            </div>
+
+            <div id="lakeResultsSection" class="results-section" style="display: none;">
+              <!-- Hero summary card -->
+              <div id="lakeHeroCard" class="lake-hero">
+                <div class="lake-hero-main">
+                  <div class="lake-hero-arrow" id="lakeHeroArrow">↗</div>
+                  <div class="lake-hero-pct" id="lakeHeroPct">+0.0%</div>
+                </div>
+                <div class="lake-hero-sub">
+                  <div class="lake-hero-label">Lake Area Change</div>
+                  <div class="lake-hero-delta" id="lakeHeroDelta">+0.00 ha net</div>
+                </div>
+              </div>
+
+              <!-- T1 vs T2 compare strip -->
+              <div class="lake-compare">
+                <div class="lake-compare-cell">
+                  <div class="lake-compare-tag">Time 1</div>
+                  <div class="lake-compare-value"><span id="lakeAreaT1">0.00</span><span class="lake-compare-unit">ha</span></div>
+                </div>
+                <div class="lake-compare-arrow">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </div>
+                <div class="lake-compare-cell">
+                  <div class="lake-compare-tag">Time 2</div>
+                  <div class="lake-compare-value"><span id="lakeAreaT2">0.00</span><span class="lake-compare-unit">ha</span></div>
+                </div>
+              </div>
+
+              <!-- Gained vs Lost proportional bar -->
+              <div class="lake-balance">
+                <div class="lake-balance-header">
+                  <span class="lake-balance-title">Water Balance</span>
+                  <span class="lake-balance-meta" id="lakeBalanceMeta">0 px changed</span>
+                </div>
+                <div class="lake-balance-bar">
+                  <div class="lake-balance-gained" id="lakeBalanceGained" style="width: 0%"></div>
+                  <div class="lake-balance-lost" id="lakeBalanceLost" style="width: 0%"></div>
+                </div>
+                <div class="lake-balance-legend">
+                  <div class="lake-legend-item">
+                    <span class="lake-legend-dot lake-legend-dot-gained"></span>
+                    <span class="lake-legend-label">Gained</span>
+                    <span class="lake-legend-value" id="lakeGainedHa">0.00 ha</span>
+                  </div>
+                  <div class="lake-legend-item">
+                    <span class="lake-legend-dot lake-legend-dot-lost"></span>
+                    <span class="lake-legend-label">Lost</span>
+                    <span class="lake-legend-value" id="lakeLostHa">0.00 ha</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Context / risk banner -->
+              <div id="lakeRiskBanner" class="lake-risk-banner lake-risk-neutral">
+                <div class="lake-risk-icon" id="lakeRiskIcon">●</div>
+                <div class="lake-risk-text" id="lakeRiskText">Analysis complete.</div>
+              </div>
+
+              <!-- Change visualization -->
+              <div class="lake-change-wrap">
+                <div class="lake-change-header">
+                  <h5>Change Map</h5>
+                  <button id="downloadChangeBtn" class="lake-download-btn" title="Download">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  </button>
+                </div>
+                <img id="lakeChangeImage" class="lake-change-image" alt="Lake change visualization">
+                <div class="lake-change-legend">
+                  <span class="lake-chip lake-chip-stable">Stable</span>
+                  <span class="lake-chip lake-chip-gained">Gained</span>
+                  <span class="lake-chip lake-chip-lost">Lost</span>
+                </div>
+              </div>
+
+              <!-- Inference parameters used -->
+              <div class="lake-params">
+                <span>Threshold <b id="lakeParamThreshold">0.50</b></span>
+                <span class="lake-params-sep">•</span>
+                <span>Resolution <b id="lakeParamResolution">10 m/px</b></span>
               </div>
             </div>
           </div>
@@ -390,6 +538,7 @@
           // Hide overlays when switching sections
           if (shipView) shipView.style.display = 'none';
           document.getElementById('buildingPanel').style.display = 'none';
+          document.getElementById('glacialLakePanel').style.display = 'none';
           const aircraftStatsEl = document.getElementById('aircraftStats');
           if (aircraftStatsEl) aircraftStatsEl.style.display = 'none';
           
@@ -470,6 +619,16 @@
               // Start fresh tracking
               updateFlights();
               updateFlightsInterval = setInterval(updateFlights, 300000); // 5 minutes
+              break;
+
+            case 4: // Glacial Lakes
+              activeFeature = "glacial_lakes";
+              if (marineTrafficFrame) marineTrafficFrame.style.display = 'none';
+              mapDiv.style.display = 'block';
+              logger.info("Glacial lake change detection activated");
+              if (glacialLakeDetection) {
+                glacialLakeDetection.showPanel();
+              }
               break;
           }
         });

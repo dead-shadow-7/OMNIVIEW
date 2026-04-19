@@ -13,6 +13,7 @@ const API_CONFIG = {
     DISASTER_CSV: "/api/disaster-csv",
     ANALYZE_DISASTERS: "/api/analyze-disasters",
     LANDCOVER: "/api/landcover",
+    GLACIAL_LAKE_CHANGE: "/api/glacial-lake-change",
   },
 
   // Helper method to get full URL
